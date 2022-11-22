@@ -1,6 +1,8 @@
 package com.carmanager.server.webSocket;
 
+import com.carmanager.server.Entity.DateMove;
 import com.carmanager.server.Entity.Move;
+import com.carmanager.server.Service.DateMoveService;
 import com.carmanager.server.Utils.DateUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -14,8 +16,11 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
+import io.swagger.annotations.ApiModel;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
@@ -27,6 +32,9 @@ import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
  * 成功建立链接之后，在此类中进行具体的消息收发处理
  */
 public class WBHandler extends SimpleChannelInboundHandler<Object> {
+
+    @Autowired
+    DateMoveService service;
 
 
     //上一次的移动方向角，用于判断是否发生了移动
@@ -97,27 +105,28 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
         {
 
             //TODO:从数据库获取之前的移动信息
+            List<DateMove> list=service.getAll();
             String json="";
             //如果现在发现正在移动，且正处于移动状态中，记录此刻发生移动的时间
             if(isMoving(dir,accelerated)&&ifIsMoving)
             {
                 lastMovingTime=new Date();
-                move.setEnd(null);
-                move.setTo("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
+                move.setEndTime(null);
+                move.setToLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
                 //TODO:修改json把当前正在移动的数据加入进去
             }
             //如果发现正在移动，且未置为移动状态，则记录首次移动时间，首次移动位置，并将当前状态设置为正在移动
             else if(isMoving(dir,accelerated))
             {
-                move.setBegin(new Date());
-                move.setFrom("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
+                move.setBeginTime(new Date());
+                move.setFromLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
                 lastMovingTime=new Date();
                 ifIsMoving=true;
             }
             else if(isStop())
             {
-                move.setEnd(new Date());
-                move.setTo("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
+                move.setEndTime(new Date());
+                move.setToLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
                 ifIsMoving=false;
                 //TODO:调用数据库存储这条记录
             }
@@ -176,12 +185,12 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
         //判断该消息是否为关闭位移提醒的消息
         if(request.equals("关闭位移提醒"))
         {
-            ChannelSupervise.removeChannel(ctx.channel());
+            ChannelSupervise.removeMoveAlert(ctx.channel());
         }
 
         logger.info("服务端收到：" + request);
         TextWebSocketFrame tws = new TextWebSocketFrame(new Date().toString()
-                + ctx.channel().id() + "：" + request);
+                + ctx.channel().id() + "服务端已经收到：" + request);
         // 群发
         ChannelSupervise.send2All(tws);
         // 返回【谁发的发给谁】

@@ -24,10 +24,13 @@ import com.example.electrocarmanager.Fragment.LocationFragment;
 import com.example.electrocarmanager.Fragment.SwitchFragment;
 import com.example.electrocarmanager.Fragment.TrackFragment;
 import com.example.electrocarmanager.LocationUtil.CarLocation.CarLocationClient;
+import com.example.electrocarmanager.LocationUtil.CarLocation.MyException;
+import com.example.electrocarmanager.LocationUtil.CarLocation.WebsocketClient;
 import com.example.electrocarmanager.LocationUtil.MyLocation.MyLocationListener;
 import com.example.electrocarmanager.LocationUtil.MyLocation.MyLocationService;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -49,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     //定位服务
     MyLocationService myLocationService;
     MyLocationListener myLocationListener;
-    CarLocationClient carLocationClient;
+    WebsocketClient websocketClient;
 
     public static Handler handler;
 
@@ -71,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
         if(myLocationService !=null)
         {
             myLocationService.unregisterListener(myLocationListener);
+        }
+        if(websocketClient!=null&&websocketClient.isOpen())
+        {
+            websocketClient.close();
         }
     }
 
@@ -174,9 +181,15 @@ public class MainActivity extends AppCompatActivity {
     //开启车辆位置定位
     void initCarLocationService()
     {
-        carLocationClient=new
-                CarLocationClient(SERVER_ADDRESS,handler);
-        boolean ifOpen=carLocationClient.isOpen();
+        try {
+            websocketClient=new
+                    WebsocketClient("ws://10.128.160.17:8081/websocket",1);
+            websocketClient.connect();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        } catch (MyException e) {
+            e.printStackTrace();
+        }
     }
 
     //初始化各个fragment
