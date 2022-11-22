@@ -17,10 +17,10 @@ public class Move {
     String id;
 
     @ApiModelProperty("移动开始时间")
-    Date beginTime;
+    String beginTime;
 
     @ApiModelProperty("移动结束时间")
-    Date endTime;
+    String endTime;
 
     @ApiModelProperty("移动起始位置")
     String fromLocation;

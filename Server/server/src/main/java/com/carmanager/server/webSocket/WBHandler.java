@@ -4,6 +4,7 @@ import com.carmanager.server.Entity.DateMove;
 import com.carmanager.server.Entity.Move;
 import com.carmanager.server.Service.DateMoveService;
 import com.carmanager.server.Utils.DateUtils;
+import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -35,6 +36,8 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
 
     @Autowired
     DateMoveService service;
+
+    Gson gson=new Gson();
 
 
     //上一次的移动方向角，用于判断是否发生了移动
@@ -103,9 +106,6 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
         ChannelSupervise.send2All(tws);
         if(ChannelSupervise.ifAlertOn())
         {
-
-            //TODO:从数据库获取之前的移动信息
-            List<DateMove> list=service.getAll();
             String json="";
             //如果现在发现正在移动，且正处于移动状态中，记录此刻发生移动的时间
             if(isMoving(dir,accelerated)&&ifIsMoving)
@@ -118,14 +118,14 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
             //如果发现正在移动，且未置为移动状态，则记录首次移动时间，首次移动位置，并将当前状态设置为正在移动
             else if(isMoving(dir,accelerated))
             {
-                move.setBeginTime(new Date());
+                move.setBeginTime(DateUtils.toHourAndMinute(new Date()));
                 move.setFromLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
                 lastMovingTime=new Date();
                 ifIsMoving=true;
             }
             else if(isStop())
             {
-                move.setEndTime(new Date());
+                move.setEndTime(DateUtils.toHourAndMinute(new Date()));
                 move.setToLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
                 ifIsMoving=false;
                 //TODO:调用数据库存储这条记录
