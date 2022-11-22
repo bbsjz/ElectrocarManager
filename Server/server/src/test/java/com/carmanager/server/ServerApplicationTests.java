@@ -1,7 +1,7 @@
 package com.carmanager.server;
 
 import com.carmanager.server.Entity.DateMove;
-import com.carmanager.server.Service.DateMoveService;
+import com.carmanager.server.Service.impl.DateMoveService;
 import com.carmanager.server.Utils.DateUtils;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;

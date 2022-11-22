@@ -1,8 +1,7 @@
 package com.carmanager.server.webSocket;
 
-import com.carmanager.server.Entity.DateMove;
 import com.carmanager.server.Entity.Move;
-import com.carmanager.server.Service.DateMoveService;
+import com.carmanager.server.Service.impl.DateMoveService;
 import com.carmanager.server.Utils.DateUtils;
 import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
@@ -17,11 +16,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
-import io.swagger.annotations.ApiModel;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Date;
-import java.util.List;
 import java.util.logging.Logger;
 
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
@@ -41,7 +38,6 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
 
 
     //上一次的移动方向角，用于判断是否发生了移动
-
     double lastDir=-1;
     //上一次的移动加速度，用于判断是否发生了移动过
     double lastAccelerated=-1;
