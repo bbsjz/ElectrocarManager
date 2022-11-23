@@ -119,5 +119,7 @@ public class MoveUtils {
             moving = false;
             beginMovingPoint = null;
         }
+
+        lastPoint = point;
     }
 }
