@@ -7,15 +7,20 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class MoveUtils {
 
-    private boolean moving = false;
+    private boolean moving = false;//当前是否在移动状态
 
-    private Point beginMovingPoint;
+    private Point beginMovingPoint;//开始移动的位置坐标
 
-    private Point lastMovingPoint;
+    private Point lastMovingPoint;//最后一次移动的位置坐标
 
-    private Point lastPoint;
+    private Point lastPoint;//上一次移动的位置坐标
 
-    private final int buffCapacity = 5;
+    private final int buffCapacity = 5;//缓冲区长度
+
+
+    final int movingThreshold = 3;// 明显移动的阈值
+
+    final int timeThreshold = 60 * 1000;// 最长不移动时间，以ms记
 
     /**
      * 缓冲区中出现了多少次移动
@@ -95,11 +100,6 @@ public class MoveUtils {
         }
         moveCount += nowMoving ? 1 : 0;
         buff.add(nowMoving);
-
-        // 明显移动的阈值
-        int movingThreshold = 3;
-        // 最长不移动时间，以ms记
-        int timeThreshold = 60 * 1000;
 
         // 上一次明显移动的点
         if (nowMoving && moveCount >= movingThreshold) {

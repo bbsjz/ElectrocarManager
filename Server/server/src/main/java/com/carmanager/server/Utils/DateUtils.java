@@ -3,6 +3,9 @@ package com.carmanager.server.Utils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * 提供日期按照某种格式转String的方法
+ */
 public class DateUtils {
 
     /**

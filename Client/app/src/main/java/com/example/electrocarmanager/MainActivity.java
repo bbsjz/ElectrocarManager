@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     RadioButton location;
     RadioButton track;
 
-    final URI SERVER_ADDRESS= URI.create("ws://echo.websocket.org");
+    final String SERVER_ADDRESS= "ws://10.128.160.17:8081/websocket";
 
     //定位服务
     MyLocationService myLocationService;
@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
     {
         try {
             websocketClient=new
-                    WebsocketClient("ws://10.128.160.17:8081/websocket",1);
+                    WebsocketClient(SERVER_ADDRESS,1);
             websocketClient.connect();
         } catch (URISyntaxException e) {
             e.printStackTrace();

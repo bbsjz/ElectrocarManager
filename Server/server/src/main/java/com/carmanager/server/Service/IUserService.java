@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * 与用户相关的管理服务，提供用户信息添加，查询
+ */
 @Service
 public interface IUserService {
 

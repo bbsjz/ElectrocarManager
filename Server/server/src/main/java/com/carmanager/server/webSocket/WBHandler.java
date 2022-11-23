@@ -102,6 +102,7 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
         // 返回【谁发的发给谁】
         // ctx.channel().writeAndFlush(tws);
     }
+
     /**
      * 唯一的一次http请求，用于创建websocket
      * */
