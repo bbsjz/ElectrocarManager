@@ -13,7 +13,6 @@ import java.util.Date;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @ApiModel("一条来自硬件发送的坐标消息")
 @Entity
 public class Point {
@@ -24,7 +23,7 @@ public class Point {
     Long id;
 
     @ApiModelProperty("消息生成时间")
-    Date createDate;
+    Date createTime;
 
     @ApiModelProperty("纬度")
     double latitude;

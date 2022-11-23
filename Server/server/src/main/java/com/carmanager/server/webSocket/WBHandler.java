@@ -1,9 +1,5 @@
 package com.carmanager.server.webSocket;
 
-import com.carmanager.server.Entity.Move;
-import com.carmanager.server.Service.impl.DateMoveService;
-import com.carmanager.server.Utils.DateUtils;
-import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -31,28 +27,6 @@ import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
  */
 public class WBHandler extends SimpleChannelInboundHandler<Object> {
 
-    @Autowired
-    DateMoveService service;
-
-    Gson gson=new Gson();
-
-
-    //上一次的移动方向角，用于判断是否发生了移动
-    double lastDir=-1;
-    //上一次的移动加速度，用于判断是否发生了移动过
-    double lastAccelerated=-1;
-
-    //用于记录当前是否处于移动状态
-    boolean ifIsMoving;
-
-    //最近一次正处于移动状态的时间
-    Date lastMovingTime;
-
-    //是否刚刚打开移动功能，用于更新移动位置
-    boolean onOpen=false;
-
-    //当前的位置移动信息
-    Move move=new Move();
     private final Logger logger=Logger.getLogger(String.valueOf(this.getClass()));
 
     private WebSocketServerHandshaker handshaker;
@@ -86,70 +60,6 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         ctx.flush();
-    }
-
-    /**
-     * 每次收到更新的位置之后，服务器将位置更新给所有在线的用户，
-     * 当有用户开启位移提醒时，服务器判断是否发生移动，并将移动信息返回给开启移动提醒的用户
-     * @param lat
-     * @param log
-     * @param dir
-     * @param accelerated
-     */
-    public void sendMsg(double lat,double log,double dir,double accelerated)
-    {
-        TextWebSocketFrame tws=new TextWebSocketFrame("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
-        ChannelSupervise.send2All(tws);
-        if(ChannelSupervise.ifAlertOn())
-        {
-            String json="";
-            //如果现在发现正在移动，且正处于移动状态中，记录此刻发生移动的时间
-            if(isMoving(dir,accelerated)&&ifIsMoving)
-            {
-                lastMovingTime=new Date();
-                move.setEndTime(null);
-                move.setToLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
-                //TODO:修改json把当前正在移动的数据加入进去
-            }
-            //如果发现正在移动，且未置为移动状态，则记录首次移动时间，首次移动位置，并将当前状态设置为正在移动
-            else if(isMoving(dir,accelerated))
-            {
-                move.setBeginTime(DateUtils.toHourAndMinute(new Date()));
-                move.setFromLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
-                lastMovingTime=new Date();
-                ifIsMoving=true;
-            }
-            else if(isStop())
-            {
-                move.setEndTime(DateUtils.toHourAndMinute(new Date()));
-                move.setToLocation("{"+"\"lat\":"+lat+",\"log\":"+log+"}");
-                ifIsMoving=false;
-                //TODO:调用数据库存储这条记录
-            }
-            ChannelSupervise.send2OpenLocationRemoveAlert(new TextWebSocketFrame(json));
-        }
-    }
-
-    public boolean isMoving(double dir,double accelerated)
-    {
-        if(!onOpen)//刚刚打开位移提醒，则把最后一次的位置更新成现在的位置
-        {
-            lastDir=dir;
-            lastAccelerated=accelerated;
-            onOpen=true;
-            return false;
-        }
-        return (Math.abs(lastDir-dir)>2||Math.abs(lastAccelerated-accelerated)>2);
-    }
-
-    public boolean isStop()
-    {
-        //都没有开启一次移动，那肯定也没有停止的概念，直接返回false
-        if(!ifIsMoving)
-        {
-            return false;
-        }
-        return new Date().after(DateUtils.subtractTime(lastMovingTime,300000));
     }
 
     private void handlerWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame){

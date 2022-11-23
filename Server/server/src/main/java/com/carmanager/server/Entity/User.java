@@ -12,7 +12,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @ApiModel("用户")
 @Entity
 public class User {

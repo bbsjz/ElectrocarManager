@@ -2,12 +2,16 @@ package com.carmanager.server.Entity;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Getter
+@Setter
 @ApiModel("移动发生的天数列表")
 @Entity
 public class DateMove {

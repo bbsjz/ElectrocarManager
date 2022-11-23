@@ -14,7 +14,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @ApiModel("角色")
 @Entity
 public class Role {

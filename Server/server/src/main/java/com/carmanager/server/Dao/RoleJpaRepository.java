@@ -1,10 +1,9 @@
 package com.carmanager.server.Dao;
 
-import com.carmanager.server.Entity.DateMove;
+import com.carmanager.server.Entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-
 @Repository
-public interface DateMoveJPARepository extends JpaRepository<DateMove, String> {
+public interface RoleJpaRepository extends JpaRepository<Role, String> {
 }
