@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public interface IMoveService {
@@ -14,6 +15,6 @@ public interface IMoveService {
 
     DateMove addDateMove(DateMove dateMove);
 
-    Page<DateMove> getDateMoveByTime(Date startTime, Date endTime);
+    List<DateMove> getDateMoveByTime(Date startTime, Date endTime);
 
 }

@@ -63,7 +63,7 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
         if (msg instanceof FullHttpRequest){
             //以http请求形式接入，但是走的是websocket
             handleHttpRequest(ctx, (FullHttpRequest) msg);
-        }else if (msg instanceof WebSocketFrame){
+        } else if (msg instanceof WebSocketFrame) {
             //处理websocket客户端的消息
             handlerWebSocketFrame(ctx, (WebSocketFrame) msg);
         }
