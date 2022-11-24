@@ -16,8 +16,6 @@ public interface IMoveService {
 
     Move addMove(Move move);
 
-    DateMove addDateMove(DateMove dateMove);
-
-    List<DateMove> getDateMoveByTime(Date startTime, Date endTime);
+    Page<Move> getMove(long pageNum, long pageSize);
 
 }
