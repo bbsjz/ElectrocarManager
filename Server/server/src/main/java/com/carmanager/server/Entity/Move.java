@@ -1,5 +1,6 @@
 package com.carmanager.server.Entity;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -41,5 +42,11 @@ public class Move {
 
     @ApiModelProperty("移动结束经度")
     Double toLongitude;
+
+    @ApiModelProperty("总移动距离")
+    Double Distance;
+
+    @ApiModelProperty("本条移动是否对用户可见")
+    Boolean visibility;
 
 }

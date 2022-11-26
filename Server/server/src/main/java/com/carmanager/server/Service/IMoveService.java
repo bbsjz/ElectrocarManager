@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 @Service
 public interface IMoveService {
 
-    Move addMove(Move move);
+    Move saveMove(Move move);
 
     Page<Move> getAllMove(long pageNum, long pageSize);
 

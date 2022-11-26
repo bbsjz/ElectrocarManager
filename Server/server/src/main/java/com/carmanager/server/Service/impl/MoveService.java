@@ -20,7 +20,7 @@ public class MoveService implements IMoveService {
     }
 
     @Override
-    public Move addMove(Move move) {
+    public Move saveMove(Move move) {
         return null;
     }
 

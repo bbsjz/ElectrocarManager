@@ -2,13 +2,13 @@ package com.carmanager.server.Service.impl;
 
 import com.carmanager.server.Entity.MovingDto;
 import com.carmanager.server.Entity.Point;
+import com.carmanager.server.Service.IMoveService;
 import com.carmanager.server.Service.IPointService;
 import com.carmanager.server.Service.IWebSocketService;
 import com.carmanager.server.Utils.MoveUtils;
 import com.carmanager.server.webSocket.ChannelSupervise;
 import com.google.gson.Gson;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,10 +16,13 @@ public class WebSocketService implements IWebSocketService {
 
     final IPointService pointService;
 
+    final IMoveService moveService;
+
     final MoveUtils moveUtils = new MoveUtils();
 
-    public WebSocketService(IPointService pointService) {
+    public WebSocketService(IPointService pointService, IMoveService moveService) {
         this.pointService = pointService;
+        this.moveService = moveService;
     }
 
     /**
@@ -34,6 +37,7 @@ public class WebSocketService implements IWebSocketService {
 
         // 向所有未开启非位移提醒的APP发送位置消息
         MovingDto dto = new MovingDto();
+        dto.setId(null); // 非开启提醒或移动情况下不返回Id
         dto.setAlert(false);
         dto.setEndTime(point.getCreateTime());
         dto.setToLatitude(point.getLatitude());
@@ -42,20 +46,27 @@ public class WebSocketService implements IWebSocketService {
         TextWebSocketFrame closeFrame = new TextWebSocketFrame(pointMessage);
         ChannelSupervise.send2CloseLocationRemoveAlert(closeFrame);
 
-        // 有人开启了移动提醒，发生移动时发送移动消息
+        // 有人开启了移动提醒
         if (ChannelSupervise.ifAlertOn()) {
-            if (!moveUtils.isMoving()) {
-                ChannelSupervise.send2OpenLocationRemoveAlert(closeFrame);
-            } else {
-                Point startPoint = moveUtils.getBeginMovingPoint();
-                dto.setAlert(true);
-                dto.setBeginTime(startPoint.getCreateTime());
-                dto.setFromLatitude(startPoint.getLatitude());
-                dto.setFromLongitude(startPoint.getLongitude());
-                String moveMessage = new Gson().toJson(dto);
-                TextWebSocketFrame openFrame = new TextWebSocketFrame(moveMessage);
-                ChannelSupervise.send2OpenLocationRemoveAlert(openFrame);
-            }
+            moveUtils.updateRecordStatus(true);
+        }
+
+        // 发生移动时发送移动消息
+        if (!moveUtils.isMoving()) {
+            ChannelSupervise.send2OpenLocationRemoveAlert(closeFrame);
+        } else {
+            Point startPoint = moveUtils.getBeginMovingPoint();
+            dto.setAlert(true);
+            dto.setBeginTime(startPoint.getCreateTime());
+            dto.setFromLatitude(startPoint.getLatitude());
+            dto.setFromLongitude(startPoint.getLongitude());
+            dto.setDistance(moveUtils.getDistance());
+            // 在一段移动记录中，假如出现一个人在某一个时刻开启了移动提醒，则整段记录都应该可见
+            dto.setVisibility(moveUtils.isNeedToRecord());
+            dto.setId(moveService.saveMove(dto).getId()); // 保存并获得Move的Id
+            String moveMessage = new Gson().toJson(dto);
+            TextWebSocketFrame openFrame = new TextWebSocketFrame(moveMessage);
+            ChannelSupervise.send2OpenLocationRemoveAlert(openFrame);
         }
 
     }
