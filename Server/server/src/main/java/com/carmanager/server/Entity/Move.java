@@ -41,7 +41,10 @@ public class Move {
     @ApiModelProperty("移动结束经度")
     Double toLongitude;
 
-    @ApiModelProperty("此次移动的移动距离")
-    Double distance;
+    @ApiModelProperty("总移动距离")
+    Double Distance;
+
+    @ApiModelProperty("本条移动是否对用户可见")
+    Boolean visibility;
 
 }

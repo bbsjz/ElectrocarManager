@@ -7,20 +7,23 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class MoveUtils {
 
-    private boolean moving = false;//当前是否在移动状态
+    private boolean moving = false; //当前是否在移动状态
 
-    private Point beginMovingPoint;//开始移动的位置坐标
+    private Point beginMovingPoint; //开始移动的位置坐标
 
-    private Point lastMovingPoint;//最后一次移动的位置坐标
+    private Point lastMovingPoint; //最后一次移动的位置坐标
 
-    private Point lastPoint;//上一次移动的位置坐标
+    private Point lastPoint; //上一次移动的位置坐标
 
-    private final int buffCapacity = 5;//缓冲区长度
+    private double distance; //移动总长度
 
+    private boolean needToRecord; //这条移动记录是否可见
 
-    final int movingThreshold = 3;// 明显移动的阈值
+    private final int buffCapacity = 5; //缓冲区长度
 
-    final int timeThreshold = 60 * 1000;// 最长不移动时间，以ms记
+    final int movingThreshold = 3; // 明显移动的阈值
+
+    final int timeThreshold = 60 * 1000; // 最长不移动时间，以ms记
 
     /**
      * 缓冲区中出现了多少次移动
@@ -79,6 +82,35 @@ public class MoveUtils {
     }
 
     /**
+     * 获取移动总距离, 不在移动则返回0
+     * @return 移动总距离
+     */
+    public double getDistance() {
+        return distance;
+    }
+
+    /**
+     * 获取本记录是否应该可见
+     * 没有移动默认为false
+     * @return 可见
+     */
+    public boolean isNeedToRecord() {
+        return needToRecord;
+    }
+
+    /**
+     * 设置本记录是否应该可见
+     * 在一段移动记录中假如出现一个人在某一个时刻开启了移动提醒
+     * 则整段记录都应该可见
+     * @param open 某时刻是否有人开启移动提醒
+     */
+    public void updateRecordStatus(boolean open) {
+        if (moving && open) {
+            needToRecord = true;
+        }
+    }
+
+    /**
      * 添加新收到的点，更新移动状态，开启同步防止线程不安全操作
      * @param point 新收到的点
      */
@@ -88,6 +120,7 @@ public class MoveUtils {
             beginMovingPoint = null;
             lastMovingPoint = null;
             moving = false;
+            distance = 0;
             return;
         }
 
@@ -118,6 +151,16 @@ public class MoveUtils {
             // 判断为结束移动
             moving = false;
             beginMovingPoint = null;
+            needToRecord = false;
         }
+
+        // 更新距离
+        if (moving) {
+            distance += CoordinateUtils.getDistance(lastPoint, point);
+        } else {
+            distance = 0;
+        }
+
+        lastPoint = point;
     }
 }

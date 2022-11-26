@@ -4,6 +4,7 @@ import com.carmanager.server.Dao.DateMoveJpaRepository;
 import com.carmanager.server.Entity.DateMove;
 import com.carmanager.server.Entity.Move;
 import com.carmanager.server.Service.IMoveService;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -19,17 +20,17 @@ public class MoveService implements IMoveService {
     }
 
     @Override
-    public Move addMove(Move move) {
+    public Move saveMove(Move move) {
         return null;
     }
 
     @Override
-    public DateMove addDateMove(DateMove dateMove) {
+    public Page<Move> getAllMove(long pageNum, long pageSize) {
         return null;
     }
 
     @Override
-    public List<DateMove> getDateMoveByTime(Date startTime, Date endTime) {
+    public Move getMove(long id) {
         return null;
     }
 }

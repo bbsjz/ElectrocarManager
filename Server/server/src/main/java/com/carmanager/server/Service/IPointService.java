@@ -18,4 +18,6 @@ public interface IPointService {
 
     List<Point> selectPointByTime(Date startTime, Date endTime);
 
+    List<Point> selectPointByMoveId(long moveId);
+
 }
