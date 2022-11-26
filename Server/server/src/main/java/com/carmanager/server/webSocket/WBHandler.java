@@ -74,12 +74,6 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
                     new PongWebSocketFrame(frame.content().retain()));
             return;
         }
-        // 本例程仅支持文本消息，不支持二进制消息
-        if (!(frame instanceof TextWebSocketFrame)) {
-            logger.info("本例程仅支持文本消息，不支持二进制消息");
-            throw new UnsupportedOperationException(String.format(
-                    "%s frame types not supported", frame.getClass().getName()));
-        }
         // 返回应答消息
         String request = ((TextWebSocketFrame) frame).text();
 

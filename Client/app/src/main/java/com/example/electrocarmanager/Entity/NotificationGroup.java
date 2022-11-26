@@ -1,4 +1,6 @@
-package com.example.electrocarmanager.Notification;
+package com.example.electrocarmanager.Entity;
+
+import com.example.electrocarmanager.Entity.Notification;
 
 import java.util.ArrayList;
 import java.util.List;

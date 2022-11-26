@@ -1,4 +1,4 @@
-package com.example.electrocarmanager.LocationUtil.CarLocation;
+package com.example.electrocarmanager.Location.CarLocation;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

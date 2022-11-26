@@ -4,17 +4,21 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.electrocarmanager.Entity.Notification;
 import com.example.electrocarmanager.R;
 
 import java.util.List;
 
-public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<NotificationHolder> {
+public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<NotificationRecyclerViewAdapter.NotificationHolder> {
     List<Notification> data;
     LayoutInflater inflater;
+    ItemClickListener clickListener;
 
     public NotificationRecyclerViewAdapter(List<Notification> data, Context context)
     {
@@ -45,6 +49,43 @@ public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<Notifi
     public int getItemCount()
     {
         return data.size();
+    }
+
+    Notification getItem(int id)
+    {
+        return data.get(id);
+    }
+
+    void setClickListener(ItemClickListener itemClickListener) {
+        this.clickListener = itemClickListener;
+    }
+
+    public class NotificationHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+
+        TextView time,from,to,last,distance;
+        LinearLayout wholeItem;
+
+        public NotificationHolder(View view)
+        {
+            super(view);
+            this.time=view.findViewById(R.id.time);
+            this.from=view.findViewById(R.id.from);
+            this.to=view.findViewById(R.id.to);
+            this.last=view.findViewById(R.id.last);
+            this.distance=view.findViewById(R.id.distance);
+            this.wholeItem=view.findViewById(R.id.wholeItem);
+            view.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (clickListener != null)
+                clickListener.onItemClick(getItem(getAdapterPosition()));
+        }
+    }
+
+    public interface ItemClickListener {
+        void onItemClick(Notification notification);
     }
 
 }

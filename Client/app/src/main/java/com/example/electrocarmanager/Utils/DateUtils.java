@@ -1,15 +1,12 @@
-package com.carmanager.server.Utils;
+package com.example.electrocarmanager.Utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * 提供日期按照某种格式转String的方法
- */
 public class DateUtils {
 
     /**
-     * 毫秒转时分秒
+     * 秒转时分秒
      * @param duration
      * @return
      */
@@ -23,24 +20,6 @@ public class DateUtils {
         String secondStr = second == 0 ? "00" : second > 10 ? second + "" : "0" + second;
 
         return hourStr + ":" + minuteStr + ":" + secondStr;
-    }
-
-    /**
-     *  加减对应时间后的日期
-     * @param date  需要加减时间的日期
-     * @param amount    加减的时间(毫秒)
-     * @return  加减对应时间后的日期
-     */
-    public static Date subtractTime(Date date, int amount) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String strTime = sdf.format(date.getTime() + amount);
-            Date time = sdf.parse(strTime);
-            return time;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
     }
 
     /**

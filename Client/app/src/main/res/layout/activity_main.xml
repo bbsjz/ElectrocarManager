@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity">
 
     <FrameLayout
@@ -20,10 +21,11 @@
 
 
         <RadioGroup
-            android:id="@+id/tabs_rg"
+            android:id="@+id/tabs"
             android:background="@color/white"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="70dp"
+            android:visibility="visible"
             android:layout_alignParentBottom="true"
             android:orientation="horizontal">
 
@@ -34,6 +36,7 @@
                 android:layout_weight="1"
                 android:button="@null"
                 android:gravity="center"
+                android:layout_marginTop="10dp"
                 android:text="开关"
                 android:drawableTop="@drawable/open"
                 />
@@ -45,6 +48,7 @@
                 android:layout_weight="1"
                 android:button="@null"
                 android:gravity="center"
+                android:layout_marginTop="10dp"
                 android:drawableTop="@drawable/location"
                 android:text="位置" />
 
@@ -55,9 +59,61 @@
                 android:layout_weight="1"
                 android:button="@null"
                 android:gravity="center"
+                android:layout_marginTop="10dp"
                 android:drawableTop="@drawable/track"
                 android:text="监测" />
         </RadioGroup>
     </RelativeLayout>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="140dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    android:id="@+id/point"
+    android:background="@drawable/half_rec"
+    android:visibility="invisible"
+    android:padding="10dp"
+    android:orientation="vertical">
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="发生移动的时间"
+        android:textColor="#000000"
+        android:textSize="25dp" />
+
+    <TextView
+        android:id="@+id/from"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="起始位置："
+        android:textColor="#000000"
+        android:textSize="18dp" />
+    <TextView
+        android:id="@+id/to"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="终止位置："
+        android:textColor="#000000"
+        android:textSize="18dp" />
+    <TextView
+        android:id="@+id/last"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="移动持续时间:"
+        android:textColor="#000000"
+        android:textSize="18dp" />
+    <TextView
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="移动总距离:"
+        android:textColor="#000000"
+        android:textSize="18dp" />
+</LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

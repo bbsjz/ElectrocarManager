@@ -1,4 +1,4 @@
-package com.example.electrocarmanager.LocationUtil.CarLocation;
+package com.example.electrocarmanager.Location.CarLocation;
 
 public class MyException extends Exception {
 

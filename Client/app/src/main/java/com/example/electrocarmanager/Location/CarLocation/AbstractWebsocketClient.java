@@ -1,4 +1,4 @@
-package com.example.electrocarmanager.LocationUtil.CarLocation;
+package com.example.electrocarmanager.Location.CarLocation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +26,10 @@ public abstract class AbstractWebsocketClient implements Closeable {
 
     public AbstractWebsocketClient(int connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
-        this.websocketContext = new WebsocketContext(new CountDownLatch(1));
+        this.websocketContext = new WebsocketContext();
     }
 
     /**
-     * 发送消息.<br>
-     *
      * @param message 发送文本
      * @return:
      */
@@ -45,8 +43,6 @@ public abstract class AbstractWebsocketClient implements Closeable {
     }
 
     /**
-     *  连接并发送消息.<br>
-     *
      * @return:
      */
     public void connect() throws MyException {
@@ -58,22 +54,8 @@ public abstract class AbstractWebsocketClient implements Closeable {
         }
     }
 
-    /**
-     * 接收消息.<br>
-     *
-     * @return: {@link java.lang.String}
-     */
-    public String receiveResult() throws MyException {
-        this.receive(this.websocketContext.getCountDownLatch());
-        if (this.websocketContext.getResult().isEmpty()) {
-            throw new MyException("未获取到任务结果信息");
-        }
-        return this.websocketContext.getResult();
-    }
 
     /**
-     * 接收消息封装.<br>
-     *
      * @param countDownLatch  计数器
      * @return:
      */
@@ -92,29 +74,25 @@ public abstract class AbstractWebsocketClient implements Closeable {
     }
 
     /**
-     * 初始化连接.<br>
-     *
+     * 初始化连接
      * @return:
      */
     protected abstract void doOpen();
 
     /**
-     * 建立连接.<br>
-     *
+     * 建立连接
      * @return:
      */
     protected abstract void doConnect() throws MyException;
 
     /**
-     * 获取本次连接channel.<br>
-     *
+     * 获取本次连接channel
      * @return: {@link Channel}
      */
     protected abstract Channel getChannel();
 
     /**
-     * 关闭连接.<br>
-     *
+     * 关闭连接
      * @return:
      * @exception:
      */

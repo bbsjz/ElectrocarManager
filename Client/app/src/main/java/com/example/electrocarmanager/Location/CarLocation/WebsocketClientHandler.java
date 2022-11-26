@@ -1,4 +1,7 @@
-package com.example.electrocarmanager.LocationUtil.CarLocation;
+package com.example.electrocarmanager.Location.CarLocation;
+
+import android.os.Handler;
+import android.os.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +18,8 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
 public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> {
+
+    public static Handler handler;
 
     private static final Logger log = LoggerFactory.getLogger(WebsocketClientHandler.class);
 
@@ -35,9 +40,11 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     private Channel channel;
 
-    public WebsocketClientHandler(WebSocketClientHandshaker webSocketClientHandshaker, WebsocketContext websocketContext) {
+    public WebsocketClientHandler(WebSocketClientHandshaker webSocketClientHandshaker,
+                                  WebsocketContext websocketContext,Handler handler) {
         this.webSocketClientHandshaker = webSocketClientHandshaker;
         this.websocketContext = websocketContext;
+        this.handler=handler;
     }
 
     public ChannelFuture handshakeFuture() {
@@ -98,8 +105,7 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     /**
-     * 处理http连接请求.<br>
-     *
+     * 处理http连接请求
      * @param msg:
      * @return:
      */
@@ -109,21 +115,20 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     /**
-     * 处理文本帧请求.<br>
-     *
-     * @param msg:
-     * @return:
+     * @param msg 服务端发来的文本信息
      */
     private void handleWebSocketFrame(Object msg) {
         WebSocketFrame frame = (WebSocketFrame) msg;
-        if (frame instanceof TextWebSocketFrame) {
+        if (frame instanceof TextWebSocketFrame) //接收到文本消息
+        {
             TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
+            Message json=new Message();
+            json.what=2;
+            json.obj=msg;
+            handler.sendMessage(json);
             // ...自定义
-            if (textFrame.text().contains("xxx")) {
-                this.websocketContext.setResult(textFrame.text());
-                this.websocketContext.getCountDownLatch().countDown();
-            }
-        } else if (frame instanceof CloseWebSocketFrame) {
+        } else if (frame instanceof CloseWebSocketFrame) //接收到关闭帧
+             {
             log.info("连接收到关闭帧");
             channel.close();
         }

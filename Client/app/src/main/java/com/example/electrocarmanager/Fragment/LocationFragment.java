@@ -1,9 +1,11 @@
 package com.example.electrocarmanager.Fragment;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,13 +15,19 @@ import com.baidu.location.BDLocation;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.MapStatus;
+import com.baidu.mapapi.map.MapStatusUpdate;
+import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.example.electrocarmanager.Entity.MovingDto;
+import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.R;
+import com.google.gson.Gson;
 
 /**
  * @author bbg
@@ -27,10 +35,17 @@ import com.example.electrocarmanager.R;
  */
 public class LocationFragment extends Fragment {
 
+    Gson gson=new Gson();
+
     MapView mapView;
 
-    //定位相关
+    boolean isFirst=true;
+
+    //UI
     BaiduMap baiduMap;
+    ImageView navigation;
+    ImageView round;
+    ImageView moveNotification;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater layoutInflater, @Nullable ViewGroup viewGroup,@Nullable Bundle savedBundle)
@@ -43,8 +58,19 @@ public class LocationFragment extends Fragment {
     public void onViewCreated(@NonNull View view,@NonNull Bundle savedBundle)
     {
         super.onViewCreated(view,savedBundle);
+        initUI(view);
+    }
+
+    void initUI(View view)
+    {
         mapView=view.findViewById(R.id.map);
         baiduMap=mapView.getMap();
+        round=view.findViewById(R.id.round);
+        navigation=view.findViewById(R.id.navigation);
+        moveNotification=view.findViewById(R.id.move_notification);
+        round.setOnClickListener(v->{
+            updateNotificationUI();
+        });
     }
 
     @Override
@@ -69,34 +95,51 @@ public class LocationFragment extends Fragment {
         super.onDestroy();
     }
 
+
     /**
      * 更新车辆的实时位置
-     * @param lat
-     * @param log
+     * @param json 序列化的MovingDto
      */
-    public void updateCarLocation(double lat,double log)
+    public void updateCarLocation(String json)
     {
-        //定义Maker坐标点
-        LatLng point = new LatLng(lat, log);
-        //构建Marker图标
-        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.drawable.loc1);
-        //构建MarkerOption，用于在地图上添加Marker
-        OverlayOptions option = new MarkerOptions()
-                .position(point)
-                .icon(bitmap);
-        //在地图上添加Marker，并显示
-        baiduMap.addOverlay(option);
+        MovingDto movingDto = gson.fromJson(json, MovingDto.class);
+        if(movingDto.toLatitude!=null&&movingDto.toLongitude!=null)
+        {
+            //定义Maker坐标点
+            LatLng point = new LatLng(movingDto.toLatitude, movingDto.toLongitude);
+            //构建Marker图标
+            BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.drawable.loc1);
+            //构建MarkerOption，用于在地图上添加Marker
+            OverlayOptions option = new MarkerOptions()
+                    .position(point)
+                    .icon(bitmap);
+            //在地图上添加Marker，并显示
+            baiduMap.addOverlay(option);
+        }
     }
 
     /**
      * 更新我的当前位置
-     * @param location
+     * @param location 我的当前位置
      */
     public void updateMyLocation(BDLocation location)
     {
         if(baiduMap==null)//防止更新位置方法在fragment被初始化之前就被调用导致空指针
         {
             return;
+        }
+        if(isFirst)
+        {
+            //设定中心点坐标
+            LatLng cent = new LatLng(location.getLatitude(),location.getLongitude());
+            //定义地图状态
+            MapStatus mMapStatus = new MapStatus.Builder()
+                    .target(cent)
+                    .build();
+            //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
+            MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
+            baiduMap.setMapStatus(mMapStatusUpdate);
+            isFirst=false;
         }
         baiduMap.setMyLocationEnabled(true);
         MyLocationData locData = new MyLocationData.Builder()
@@ -105,7 +148,20 @@ public class LocationFragment extends Fragment {
                 .direction(location.getDirection()).latitude(location.getLatitude())
                 .longitude(location.getLongitude()).build();
         baiduMap.setMyLocationData(locData);
-        MyLocationConfiguration config = new MyLocationConfiguration(MyLocationConfiguration.LocationMode.FOLLOWING, true, null);
-        baiduMap.setMyLocationConfiguration(config);
+    }
+
+    void updateNotificationUI()
+    {
+        if(!MainActivity.realAlertOn)
+        {
+            round.setImageDrawable(getResources().getDrawable(R.drawable.round_open));
+            MainActivity.realAlertOn=true;
+        }
+        else
+        {
+            round.setImageDrawable(getResources().getDrawable(R.drawable.round));
+            moveNotification.setImageDrawable(getResources().getDrawable(R.drawable.move_notification));
+            MainActivity.realAlertOn=false;
+        }
     }
 }

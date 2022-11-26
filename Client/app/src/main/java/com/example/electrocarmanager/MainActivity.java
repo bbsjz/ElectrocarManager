@@ -17,35 +17,50 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import com.baidu.location.BDLocation;
+import com.baidu.mapapi.model.LatLng;
+import com.example.electrocarmanager.Entity.Notification;
 import com.example.electrocarmanager.Fragment.LocationFragment;
+import com.example.electrocarmanager.Fragment.PointFragment;
+import com.example.electrocarmanager.Fragment.RealTimePointFragment;
 import com.example.electrocarmanager.Fragment.SwitchFragment;
 import com.example.electrocarmanager.Fragment.TrackFragment;
-import com.example.electrocarmanager.LocationUtil.CarLocation.CarLocationClient;
-import com.example.electrocarmanager.LocationUtil.CarLocation.MyException;
-import com.example.electrocarmanager.LocationUtil.CarLocation.WebsocketClient;
-import com.example.electrocarmanager.LocationUtil.MyLocation.MyLocationListener;
-import com.example.electrocarmanager.LocationUtil.MyLocation.MyLocationService;
+import com.example.electrocarmanager.Location.CarLocation.MyException;
+import com.example.electrocarmanager.Location.CarLocation.WebsocketClient;
+import com.example.electrocarmanager.Location.MyLocation.MyLocationListener;
+import com.example.electrocarmanager.Location.MyLocation.MyLocationService;
+import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;
+import com.example.electrocarmanager.Utils.DateUtils;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NotificationRecyclerViewAdapter.ItemClickListener,
+        PointFragment.ArrowClickListener, RealTimePointFragment.RealArrowClickListener,TrackFragment.RealTimeClickListener{
 
     //三个fragment
     SwitchFragment switchFragment;
     LocationFragment locationFragment;
     TrackFragment trackFragment;
-
+    RealTimePointFragment realTimePointFragment;
     FragmentManager fragmentManager;
 
-    //三个底部按钮
+    //底部
     RadioButton open;
     RadioButton location;
     RadioButton track;
+    LinearLayout point;//一个点轨迹栏
+    RadioGroup tabs;//一个三个按钮的按钮集合
+    TextView time;
+    TextView from;
+    TextView to;
+    TextView last;
+    TextView distance;
 
     final String SERVER_ADDRESS= "ws://10.128.160.17:8081/websocket";
 
@@ -54,7 +69,10 @@ public class MainActivity extends AppCompatActivity {
     MyLocationListener myLocationListener;
     WebsocketClient websocketClient;
 
+
     public static Handler handler;
+    public static boolean realPointOn=false;//是否正处在实时轨迹界面
+    public static boolean realAlertOn=false;//当前是否开启实时位移提醒
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,7 +179,13 @@ public class MainActivity extends AppCompatActivity {
                     //2表示车辆定位服务返回了结果
                     case 2:
                     {
-                        locationFragment.updateCarLocation(29,113);
+                        locationFragment.updateCarLocation((String) msg.obj);
+                        trackFragment.getNowMsg((String) msg.obj);
+                    }
+                    //3表示实时位移信息发生更新
+                    case 3:
+                    {
+                        updateRealPointDetail(trackFragment.points,trackFragment.notification);
                     }
                 }
             }
@@ -197,10 +221,11 @@ public class MainActivity extends AppCompatActivity {
     {
         fragmentManager =getSupportFragmentManager();
 
-        //实例化三个fragment，其中，默认一开始显示开锁页面
+        //实例化四个fragment，其中，默认一开始显示开锁页面
         switchFragment=new SwitchFragment();
         locationFragment=new LocationFragment();
-        trackFragment=new TrackFragment();
+        trackFragment=new TrackFragment(this,handler);
+        realTimePointFragment=new RealTimePointFragment(this);
 
         fragmentManager.beginTransaction().add(R.id.fragment,switchFragment).commit();
     }
@@ -211,6 +236,15 @@ public class MainActivity extends AppCompatActivity {
         open=findViewById(R.id.open);
         location=findViewById(R.id.location);
         track=findViewById(R.id.track);
+
+        point=findViewById(R.id.point);
+        tabs=findViewById(R.id.tabs);
+
+        time=findViewById(R.id.time);
+        from=findViewById(R.id.from);
+        to=findViewById(R.id.to);
+        last=findViewById(R.id.last);
+        distance=findViewById(R.id.distance);
 
         location.setOnClickListener(view -> {
             fragmentManager.beginTransaction().replace(R.id.fragment,locationFragment).commit();
@@ -240,4 +274,60 @@ public class MainActivity extends AppCompatActivity {
         System.exit(0);
     }
 
+    @Override
+    public void onItemClick(Notification notification) {
+        PointFragment pointFragment=new PointFragment(this,notification.id);
+        fragmentManager.beginTransaction().replace(R.id.fragment,pointFragment).commit();
+
+        updatePointDetail(notification);
+
+        tabs.setVisibility(View.INVISIBLE);
+        point.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onArrowClick() {
+        fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
+        tabs.setVisibility(View.VISIBLE);
+        point.setVisibility(View.INVISIBLE);
+    }
+
+    void updatePointDetail(Notification notification)
+    {
+        time.setText(notification.time);
+        from.setText("移动起始位置:"+notification.from);
+        to.setText("移动结束位置:"+notification.to);
+        last.setText("移动持续时间:"+notification.last);
+        distance.setText("移动距离:"+notification.distance);
+    }
+
+    @Override
+    public void onRealTimeClick() {
+        realPointOn=true;
+        realTimePointFragment.updateDataAndMap(trackFragment.points);
+        fragmentManager.beginTransaction().replace(R.id.fragment,realTimePointFragment).commit();
+
+        updateRealPointDetail(trackFragment.points,trackFragment.notification);
+
+        tabs.setVisibility(View.INVISIBLE);
+        point.setVisibility(View.VISIBLE);
+    }
+
+    void updateRealPointDetail(List<LatLng> data,Notification notification)
+    {
+        realTimePointFragment.updateDataAndMap(data);
+        from.setText("移动起始位置:"+notification.from);
+        time.setText("移动起始时间:"+ notification.time);
+        to.setText("当前车辆位置:"+notification.to);
+        last.setText("移动累计持续时间:"+notification.last);
+        distance.setText("移动累计总距离:"+notification.distance);
+    }
+
+    @Override
+    public void onRealArrowClick() {
+        realPointOn=false;
+        fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
+        tabs.setVisibility(View.VISIBLE);
+        point.setVisibility(View.INVISIBLE);
+    }
 }

@@ -1,4 +1,6 @@
-package com.example.electrocarmanager.LocationUtil.CarLocation;
+package com.example.electrocarmanager.Location.CarLocation;
+
+import android.os.Handler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 
 public class WebsocketClient extends AbstractWebsocketClient {
+    public static Handler msgHandler;
 
     private static final Logger log = LoggerFactory.getLogger(WebsocketClient.class);
 
@@ -62,7 +65,7 @@ public class WebsocketClient extends AbstractWebsocketClient {
         // websocket客户端握手实现的基类
         WebSocketClientHandshaker webSocketClientHandshaker = WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders());
         // 业务处理类
-        handler = new WebsocketClientHandler(webSocketClientHandshaker, this.websocketContext);
+        handler = new WebsocketClientHandler(webSocketClientHandshaker, this.websocketContext,this.msgHandler);
         // client端，引导client channel启动
         bootstrap = new Bootstrap();
         // 添加管道 绑定端口 添加作用域等

@@ -1,4 +1,4 @@
-package com.example.electrocarmanager.LocationUtil.MyLocation;
+package com.example.electrocarmanager.Location.MyLocation;
 
 import android.content.Context;
 import com.baidu.location.BDAbstractLocationListener;
