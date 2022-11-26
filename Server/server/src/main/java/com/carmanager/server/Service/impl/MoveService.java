@@ -25,7 +25,12 @@ public class MoveService implements IMoveService {
     }
 
     @Override
-    public Page<Move> getMove(long pageNum, long pageSize) {
+    public Page<Move> getAllMove(long pageNum, long pageSize) {
+        return null;
+    }
+
+    @Override
+    public Move getMove(long id) {
         return null;
     }
 }

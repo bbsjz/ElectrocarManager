@@ -23,4 +23,9 @@ public class PointService implements IPointService {
     public List<Point> selectPointByTime(Date startTime, Date endTime) {
         return null;
     }
+
+    @Override
+    public List<Point> selectPointByMoveId(long moveId) {
+        return null;
+    }
 }

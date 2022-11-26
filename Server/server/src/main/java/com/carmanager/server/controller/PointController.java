@@ -2,13 +2,10 @@ package com.carmanager.server.controller;
 
 import com.carmanager.server.Entity.Point;
 import com.carmanager.server.Service.IPointService;
-import com.carmanager.server.exception.NotSupportArgumentException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import io.swagger.annotations.ApiParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
@@ -25,10 +22,16 @@ public class PointController {
     }
 
     @ApiOperation("按时间顺序获取历史数据")
-    @GetMapping("")
-    public List<Point> getPoint(@RequestParam Date startTime,
-                                @RequestParam Date endTime) {
+    @GetMapping("/select")
+    public List<Point> getPointByTime(@ApiParam("开始时间") @RequestParam Date startTime,
+                                @ApiParam("结束时间") @RequestParam Date endTime) {
         return pointService.selectPointByTime(startTime, endTime);
+    }
+
+    @ApiOperation("按移动的Id获取历史数据")
+    @GetMapping("/{id}")
+    public List<Point> getPointByMoveId(@ApiParam("移动的Id") @PathVariable long id) {
+        return pointService.selectPointByMoveId(id);
     }
 
 }
