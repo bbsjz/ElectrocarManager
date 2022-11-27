@@ -93,6 +93,8 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<mainClass>com.carmanager.server.ServerApplication</mainClass>
+					<fork>true</fork>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
