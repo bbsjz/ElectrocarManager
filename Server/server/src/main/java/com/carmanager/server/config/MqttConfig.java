@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MqttConfig {
 
-    public static final String MQTT_SERVER_ADDRESS = "tcp://10.132.0.233:1883"; // broker-cn.emqx.io
+    public static final String MQTT_SERVER_ADDRESS = "tcp://jp.safengine.xyz:8883"; // broker-cn.emqx.io
 
     public static final String MQTT_PUBLISHER_ID = "spring-server";
 
