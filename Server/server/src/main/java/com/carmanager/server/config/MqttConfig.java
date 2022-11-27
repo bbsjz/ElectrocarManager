@@ -1,20 +1,34 @@
 package com.carmanager.server.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MqttConfig {
 
-    public static final String MQTT_SERVER_ADDRESS = "tcp://jp.safengine.xyz:8883"; // broker-cn.emqx.io
+    @Value("${mqtt.server-address}")
+    public String MQTT_SERVER_ADDRESS;
 
-    public static final String MQTT_PUBLISHER_ID = "spring-server";
+    @Value("${mqtt.publisher-id}")
+    public String MQTT_PUBLISHER_ID;
 
-    public static final String TOPIC_SENSOR = "car-manager/sensor";
+    @Value("${mqtt.user-name}")
+    public String USER_NAME;
 
-    public static final String TOPIC_LOCK = "car-manager/lock";
+    @Value("${mqtt.password}")
+    public String PASSWORD;
 
-    public static final int QOS = 0;
 
-    public static final boolean RETAINED = false;
+    @Value("${mqtt.topic.sensor}")
+    public String TOPIC_SENSOR;
+
+    @Value("${mqtt.topic.lock}")
+    public String TOPIC_LOCK;
+
+    @Value("${mqtt.qos}")
+    public int QOS;
+
+    @Value("${mqtt.retained}")
+    public boolean RETAINED;
 
 }

@@ -2,9 +2,7 @@ package com.carmanager.server.Utils;
 
 import com.carmanager.server.config.MqttConfig;
 import com.carmanager.server.mqtt.MqttFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.stereotype.Component;
 
@@ -16,19 +14,28 @@ public class MqttUtils {
 
     private static final Logger logger = Logger.getLogger(String.valueOf(MqttUtils.class));
 
+    private final MqttFactory factory;
+
+    private final MqttConfig config;
+
+    public MqttUtils(MqttFactory factory, MqttConfig config) {
+        this.factory = factory;
+        this.config = config;
+    }
+
     /**
      * 发送消息
      * @param topic 主题
      * @param data 消息内容
      */
-    public static void send(String topic, Object data) {
-        IMqttClient client = MqttFactory.getInstance();
+    public void send(String topic, Object data) {
+        IMqttClient client = factory.getInstance();
         Gson gson = new Gson();
         String json = gson.toJson(data);
         try {
             MqttMessage message = new MqttMessage(json.getBytes(StandardCharsets.UTF_8));
-            message.setQos(MqttConfig.QOS);
-            message.setRetained(MqttConfig.RETAINED);
+            message.setQos(config.QOS);
+            message.setRetained(config.RETAINED);
             client.publish(topic, message);
         } catch (MqttException e) {
             logger.severe(String.format("MQTT: 向主题[%s]发送消息失败, 消息内容: [%s]", topic, json));
@@ -40,8 +47,8 @@ public class MqttUtils {
      * @param topic 主题
      * @param listener 消息监听处理函数
      */
-    public static void subscribe(String topic, IMqttMessageListener listener) {
-        IMqttClient client = MqttFactory.getInstance();
+    public void subscribe(String topic, IMqttMessageListener listener) {
+        IMqttClient client = factory.getInstance();
         try {
             client.subscribe(topic, listener);
         } catch (MqttException e) {

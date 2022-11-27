@@ -18,11 +18,17 @@ public class MqttFactory {
 
     private static final Logger logger = Logger.getLogger(String.valueOf(MqttFactory.class));
 
+    private final MqttConfig config;
+
+    public MqttFactory(MqttConfig config) {
+        this.config = config;
+    }
+
     /**
      * 获取客户端实例
      * 单例模式, 存在则返回, 不存在则初始化
      */
-    public static IMqttClient getInstance() {
+    public IMqttClient getInstance() {
         if (client == null) {
             init();
         }
@@ -32,10 +38,10 @@ public class MqttFactory {
     /**
      *   初始化客户端
      */
-    public static void init() {
+    public void init() {
         try {
             // null用于防止MqttClient产生大量持久化文件夹
-            client = new MqttClient(MqttConfig.MQTT_SERVER_ADDRESS, MqttConfig.MQTT_PUBLISHER_ID, null);
+            client = new MqttClient(config.MQTT_SERVER_ADDRESS, config.MQTT_PUBLISHER_ID, null);
 
             // MQTT配置对象
             MqttConnectOptions options = new MqttConnectOptions();
@@ -45,12 +51,14 @@ public class MqttFactory {
             options.setCleanSession(true);
             // 发送心跳包
             options.setKeepAliveInterval(60);
+            options.setUserName(config.USER_NAME);
+            options.setPassword(config.PASSWORD.toCharArray());
 
             if (!client.isConnected()) {
                 client.connect(options);
             }
         } catch (MqttException e) {
-            logger.severe(String.format("MQTT: 连接消息服务器[%s]失败", MqttConfig.MQTT_SERVER_ADDRESS));
+            logger.severe(String.format("MQTT: 连接消息服务器[%s]失败", config.MQTT_SERVER_ADDRESS));
         }
     }
 
