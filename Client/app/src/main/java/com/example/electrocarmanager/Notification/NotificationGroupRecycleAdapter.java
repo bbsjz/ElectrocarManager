@@ -10,18 +10,19 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.electrocarmanager.Entity.NotificationGroup;
+import com.example.electrocarmanager.Entity.NotifyGroup;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.PxUtils;
 
 import java.util.List;
 
 public class NotificationGroupRecycleAdapter extends RecyclerView.Adapter<NotificationGroupRecycleAdapter.NotificationGroupHolder> {
     NotificationRecyclerViewAdapter.ItemClickListener itemClickListener;
-    List<NotificationGroup> data;
+    List<NotifyGroup> data;
     LayoutInflater inflater;
     Context context;
 
-    public NotificationGroupRecycleAdapter(List<NotificationGroup> data, NotificationRecyclerViewAdapter.ItemClickListener itemClickListener,Context context)
+    public NotificationGroupRecycleAdapter(List<NotifyGroup> data, NotificationRecyclerViewAdapter.ItemClickListener itemClickListener, Context context)
     {
         this.data=data;
         this.itemClickListener = itemClickListener;
@@ -40,7 +41,7 @@ public class NotificationGroupRecycleAdapter extends RecyclerView.Adapter<Notifi
     @Override
     public void onBindViewHolder(@NonNull NotificationGroupHolder holder,int position)
     {
-        NotificationGroup notificationGroup=data.get(position);
+        NotifyGroup notificationGroup=data.get(position);
         LinearLayoutManager linearLayoutManager=new LinearLayoutManager(context);
         NotificationRecyclerViewAdapter  adapter=
                 new NotificationRecyclerViewAdapter(notificationGroup.notifications,context);
@@ -50,7 +51,7 @@ public class NotificationGroupRecycleAdapter extends RecyclerView.Adapter<Notifi
         holder.date.setText(notificationGroup.date);
         if(position==data.size()-1)
         {
-            holder.notification.setPadding(0,150,0,200);
+            holder.notification.setPadding(PxUtils.dp2px(context,10),PxUtils.dp2px(context,50),PxUtils.dp2px(context,10),PxUtils.dp2px(context,80));
         }
     }
 

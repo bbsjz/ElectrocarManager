@@ -78,12 +78,12 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
         String request = ((TextWebSocketFrame) frame).text();
 
         //判断该消息是否为开启位移提醒的消息
-        if(request.equals("开启位移提醒"))
+        if(request.equals("OPEN_MOVING_ALERT"))
         {
             ChannelSupervise.addMoveAlert(ctx.channel());
         }
         //判断该消息是否为关闭位移提醒的消息
-        if(request.equals("关闭位移提醒"))
+        if(request.equals("CLOSE_MOVING_ALERT"))
         {
             ChannelSupervise.removeMoveAlert(ctx.channel());
         }
@@ -111,7 +111,7 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
             return;
         }
         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(
-                "ws://localhost:8080/websocket", null, false);
+                "ws://localhost:8081/websocket", null, false);
         handshaker = wsFactory.newHandshaker(req);
         if (handshaker == null) {
             WebSocketServerHandshakerFactory

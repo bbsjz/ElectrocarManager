@@ -2,15 +2,28 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    android:background="#eeeeee"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:layout_width="380dp"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/off"
-        android:id="@+id/Switch"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent">
+        <ImageView
+            android:layout_width="380dp"
+            android:layout_height="wrap_content"
+            android:src="@drawable/on"
+            android:id="@+id/un_lock" />
+        <ImageView
+            android:layout_width="380dp"
+            android:paddingTop="20dp"
+            android:layout_height="wrap_content"
+            android:src="@drawable/off"
+            android:id="@+id/lock" />
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.example.electrocarmanager.Fragment;
 
+import android.app.NotificationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -18,14 +19,15 @@ import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.DistanceUtil;
 import com.example.electrocarmanager.Entity.Move;
 import com.example.electrocarmanager.Entity.MovingDto;
-import com.example.electrocarmanager.Entity.Notification;
-import com.example.electrocarmanager.Entity.NotificationGroup;
+import com.example.electrocarmanager.Entity.Notify;
+import com.example.electrocarmanager.Entity.NotifyGroup;
 import com.example.electrocarmanager.Location.CarLocation.GetAddress;
 import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.Notification.NotificationGroupRecycleAdapter;
 import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;
 import com.example.electrocarmanager.R;
 import com.example.electrocarmanager.Utils.DateUtils;
+import com.example.electrocarmanager.Utils.PxUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -52,9 +54,9 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
     Gson gson=new Gson();
 
-    List<NotificationGroup> data;//历史记录
+    List<NotifyGroup> data=new ArrayList<>();//历史记录
     public List<LatLng> points=new ArrayList<>();//保留实时移动信息的点集数据
-    public Notification notification;//实时的移动信息
+    public Notify notification;//实时的移动信息
 
     RealTimeClickListener listener;
 
@@ -74,13 +76,12 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
     final String STORE_OLD_MOVING_URL="";
 
     NotificationRecyclerViewAdapter.ItemClickListener itemClickListener;
-
     NotificationGroupRecycleAdapter adapter;
 
     String lastDate=null;
 
     //当前车辆是否处于位移状态
-    boolean isAlert=false;
+    boolean isMoving =false;
     //累计移动总距离
     double totalDistance=0;
 
@@ -103,7 +104,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
     {
         data=new ArrayList<>();
         initUI(view);
-        test();
+//        test();
         updateMovingMsg();
 //        getOldMsgAndUpdate();
     }
@@ -115,12 +116,34 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
         alert=view.findViewById(R.id.alert);
         notMove=view.findViewById(R.id.not_move);
         move=view.findViewById(R.id.move);
-        recyclerView.setPadding(10,alert.getMeasuredHeight()+notMove.getMeasuredHeight()+330,0,0);
         from=move.findViewById(R.id.from);
         time=move.findViewById(R.id.time);
         to=move.findViewById(R.id.to);
         last=move.findViewById(R.id.last);
         distance =move.findViewById(R.id.distance);
+        if(MainActivity.realAlertOn)
+        {
+            alert.setText("位置移动提醒已开启");
+            if(isMoving)//正在移动时，应该显示移动信息
+            {
+                notMove.setVisibility(View.INVISIBLE);
+                move.setVisibility(View.VISIBLE);
+                recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),250),0,0);
+            }
+            else//没有移动时，显示没有移动
+            {
+                notMove.setVisibility(View.VISIBLE);
+                move.setVisibility(View.INVISIBLE);
+                recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),120),0,0);
+            }
+        }
+        else
+        {
+            alert.setText("位置移动提醒未开启");
+            notMove.setVisibility(View.INVISIBLE);
+            move.setVisibility(View.INVISIBLE);
+            recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),50),0,0);
+        }
     }
 
     public void getNowMsg(String json)
@@ -130,16 +153,16 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             return;
         }
         MovingDto movingDto = gson.fromJson(json, MovingDto.class);
-        if(movingDto.alert&&!isAlert)//当前正在移动，且第一次检测到移动
+        if(movingDto.alert&&!isMoving)//当前正在移动，且第一次检测到移动
         {
             //置标志位为真
-            isAlert=true;
+            isMoving =true;
 
             //更新栏目
             notMove.setVisibility(View.INVISIBLE);
             move.setVisibility(View.VISIBLE);
             move.setOnClickListener(this);
-            recyclerView.setPadding(10,alert.getMeasuredHeight()+move.getMeasuredHeight()+330,0,0);
+            recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),250),0,0);
 
             //填入初始数据
             GetAddress getAddress=new GetAddress(movingDto.fromLatitude,movingDto.fromLongitude);
@@ -173,6 +196,10 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
                 handler.sendMessage(msg);
             }
 
+            //发出通知
+            Message msg=new Message();
+            msg.what=6;
+            handler.sendMessage(msg);
         }
         else if(movingDto.alert)//当前正在移动，且之前也在移动
         {
@@ -206,15 +233,15 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
                 handler.sendMessage(msg);
             }
         }
-        else if(isAlert)//车辆的此次移动已经停止
+        else if(isMoving)//车辆的此次移动已经停止
         {
-            //保存数据
-            postOldMsg(movingDto.id,totalDistance);
-
             //清空数据避免影响到下一次
-            isAlert=false;
+            isMoving =false;
             totalDistance=0;
             points.clear();
+            notMove.setVisibility(View.VISIBLE);
+            move.setVisibility(View.INVISIBLE);
+            recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),120),0,0);
 
             //TODO:直接在本地展示历史数据
 
@@ -290,8 +317,8 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
     void getData(String rowData)
     {
         List<Move> list=gson.fromJson(rowData,new TypeToken<List<Move>>(){}.getType());
-        List<Notification> notifications=new ArrayList<>();
-        NotificationGroup notificationGroup=new NotificationGroup();
+        List<Notify> notifications=new ArrayList<>();
+        NotifyGroup notificationGroup=new NotifyGroup();
         List<Thread> threadsFrom=new ArrayList<>();
         List<Thread> threadsTo=new ArrayList<>();
         List<GetAddress> getsFrom=new ArrayList<>();
@@ -315,7 +342,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
         for(int i=0;i<list.size();i++)
         {
             String date= DateUtils.toYearAndMonthAndDate(list.get(i).beginTime);
-            Notification notification=new Notification();
+            Notify notification=new Notify();
             notification.time=DateUtils.toHourAndMinute(list.get(i).beginTime)+"-"+DateUtils.toHourAndMinute(list.get(i).endTime);
             try {
                 threadsFrom.get(i).join();
@@ -368,27 +395,26 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
         recyclerView.setAdapter(adapter);
     }
 
-    void test() {
-        data = new ArrayList<>();
-        Notification notification1 = new Notification(1L,"16:22:23-16:34:57", "武汉大学", "华中科技大学", 1200, "00:12:34");
-
-        Notification notification2 = new Notification(2L,"16:27:02-16:37:26", "街道口", "广埠屯", 66, "00:10:24");
-
-        NotificationGroup notificationGroup = new NotificationGroup();
-        notificationGroup.notifications.add(notification1);
-        notificationGroup.notifications.add(notification2);
-        notificationGroup.date = "11月6日";
-
-        data.add(notificationGroup);
-
-        NotificationGroup notificationGroup1 = new NotificationGroup();
-        notificationGroup1.notifications.add(notification1);
-        notificationGroup1.notifications.add(notification2);
-        notificationGroup1.date = "11月7日";
-
-        data.add(notificationGroup1);
-
-    }
+//    void test() {
+//        data = new ArrayList<>();
+//        Notify notification1 = new Notify(1L,"16:22:23-16:34:57", "武汉大学", "华中科技大学", 1200, "00:12:34");
+//
+//        Notify notification2 = new Notify(2L,"16:27:02-16:37:26", "街道口", "广埠屯", 66, "00:10:24");
+//
+//        NotifyGroup notificationGroup = new NotifyGroup();
+//        notificationGroup.notifications.add(notification1);
+//        notificationGroup.notifications.add(notification2);
+//        notificationGroup.date = "11月6日";
+//
+//        data.add(notificationGroup);
+//
+//        NotifyGroup notificationGroup1 = new NotifyGroup();
+//        notificationGroup1.notifications.add(notification1);
+//        notificationGroup1.notifications.add(notification2);
+//        notificationGroup1.date = "11月7日";
+//
+//        data.add(notificationGroup1);
+//    }
 
     //当实时移动信息被点击后执行
     @Override

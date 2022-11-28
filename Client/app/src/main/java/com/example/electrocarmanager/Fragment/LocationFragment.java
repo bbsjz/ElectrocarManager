@@ -1,7 +1,10 @@
 package com.example.electrocarmanager.Fragment;
 
-import android.graphics.Bitmap;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,14 +23,29 @@ import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MarkerOptions;
-import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.map.Overlay;
 import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.search.route.BikingRouteResult;
+import com.baidu.mapapi.search.route.DrivingRouteResult;
+import com.baidu.mapapi.search.route.IndoorRouteResult;
+import com.baidu.mapapi.search.route.MassTransitRouteResult;
+import com.baidu.mapapi.search.route.OnGetRoutePlanResultListener;
+import com.baidu.mapapi.search.route.PlanNode;
+import com.baidu.mapapi.search.route.RoutePlanSearch;
+import com.baidu.mapapi.search.route.TransitRouteResult;
+import com.baidu.mapapi.search.route.WalkingRouteLine;
+import com.baidu.mapapi.search.route.WalkingRoutePlanOption;
+import com.baidu.mapapi.search.route.WalkingRouteResult;
 import com.example.electrocarmanager.Entity.MovingDto;
 import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.R;
 import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author bbg
@@ -41,11 +59,45 @@ public class LocationFragment extends Fragment {
 
     boolean isFirst=true;
 
+    Handler handler;
+
+    LatLng myLoc;
+    LatLng carLoc;
+    float ra;//radius
+    float di;//direction
+    RoutePlanSearch search;
+    List<LatLng> points=new ArrayList<>();//路线规划展示的路径
+    List<Overlay> polyLines =new ArrayList<>();//存储路线
+
     //UI
     BaiduMap baiduMap;
     ImageView navigation;
     ImageView round;
     ImageView moveNotification;
+
+    public LocationFragment(Handler handler)
+    {
+        this.handler=handler;
+    }
+
+    @Override
+    public void onCreate(Bundle bundle)
+    {
+        super.onCreate(bundle);
+        //获取最近一次使用时我和车的位置，若是第一次使用则设置默认值
+        SharedPreferences preferences=getContext().getSharedPreferences("lastLoc", Context.MODE_PRIVATE);
+        double myLat=preferences.getFloat("myLat",30.5f);
+        double myLog=preferences.getFloat("myLog",114.3f);
+        double carLat=preferences.getFloat("carLat",30.45f);
+        double carLog=preferences.getFloat("carLog",114.25f);
+        float radius=preferences.getFloat("radius",30.0f);
+        float direction=preferences.getFloat("direction",30.0f);
+        myLoc=new LatLng(myLat,myLog);
+        carLoc=new LatLng(carLat,carLog);
+        ra=radius;
+        di=direction;
+
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater layoutInflater, @Nullable ViewGroup viewGroup,@Nullable Bundle savedBundle)
@@ -58,7 +110,11 @@ public class LocationFragment extends Fragment {
     public void onViewCreated(@NonNull View view,@NonNull Bundle savedBundle)
     {
         super.onViewCreated(view,savedBundle);
+        isFirst=true;
         initUI(view);
+        updateMyFirstLocation();
+        updateCarLocation();
+        updateRoute();
     }
 
     void initUI(View view)
@@ -71,13 +127,85 @@ public class LocationFragment extends Fragment {
         round.setOnClickListener(v->{
             updateNotificationUI();
         });
-    }
+        if(MainActivity.realAlertOn)
+        {
+            round.setImageResource(R.drawable.round_open);
+            moveNotification.setImageResource(R.drawable.notification_on);
+        }
+        else
+        {
+            round.setImageResource(R.drawable.round);
+            moveNotification.setImageResource(R.drawable.move_notification);
+        }
 
+        navigation.setOnClickListener(v-> {
+            if(polyLines.size()!=0)
+            {
+                baiduMap.removeOverLays(polyLines);
+                polyLines.clear();
+            }
+            search=RoutePlanSearch.newInstance();
+            OnGetRoutePlanResultListener listener = new OnGetRoutePlanResultListener() {
+                @Override
+                public void onGetWalkingRouteResult(WalkingRouteResult walkingRouteResult) {
+                    //创建WalkingRouteOverlay实例
+                    List<WalkingRouteLine> list=walkingRouteResult.getRouteLines();
+                    for(WalkingRouteLine line:list)
+                    {
+                        List<WalkingRouteLine.WalkingStep> steps=line.getAllStep();
+                        for(WalkingRouteLine.WalkingStep step:steps)
+                        {
+                            List<LatLng> data=step.getWayPoints();
+                            {
+                                for(LatLng point:data)
+                                {
+                                    points.add(point);
+                                }
+                            }
+                        }
+                    }
+                    updateRoute();
+                }
+
+                @Override
+                public void onGetTransitRouteResult(TransitRouteResult transitRouteResult) {
+
+                }
+
+                @Override
+                public void onGetMassTransitRouteResult(MassTransitRouteResult massTransitRouteResult) {
+
+                }
+
+                @Override
+                public void onGetDrivingRouteResult(DrivingRouteResult drivingRouteResult) {
+
+                }
+
+                @Override
+                public void onGetIndoorRouteResult(IndoorRouteResult indoorRouteResult) {
+
+                }
+
+                @Override
+                public void onGetBikingRouteResult(BikingRouteResult bikingRouteResult) {
+
+                }
+            };
+            search.setOnGetRoutePlanResultListener(listener);
+            PlanNode stNode = PlanNode.withLocation(myLoc);
+            PlanNode enNode = PlanNode.withLocation(carLoc);
+            search.walkingSearch((new WalkingRoutePlanOption())
+                    .from(stNode)
+                    .to(enNode));
+        });
+    }
     @Override
     public void onResume()
     {
         super.onResume();
         mapView.onResume();
+
     }
 
     @Override
@@ -85,6 +213,7 @@ public class LocationFragment extends Fragment {
     {
         mapView.onPause();
         super.onPause();
+
     }
 
     @Override
@@ -92,30 +221,49 @@ public class LocationFragment extends Fragment {
     {
         mapView.onDestroy();
         baiduMap.setMyLocationEnabled(false);
+        if(search!=null)
+        {
+            search.destroy();
+        }
+        SharedPreferences preferences=getContext().getSharedPreferences("lastLoc",Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor=preferences.edit();
+        editor.putFloat("myLat",(float) myLoc.latitude);
+        editor.putFloat("myLog",(float) myLoc.longitude);
+        editor.putFloat("carLat",(float) carLoc.latitude);
+        editor.putFloat("carLog",(float) carLoc.longitude);
+        editor.putFloat("radius",ra);
+        editor.putFloat("direction",di);
         super.onDestroy();
     }
 
 
     /**
-     * 更新车辆的实时位置
+     * 解析传过来的json实时位置信息，若解析成功则更新位置坐标
      * @param json 序列化的MovingDto
      */
-    public void updateCarLocation(String json)
+    public void parseJsonAndUpdateCarLocation(String json)
     {
         MovingDto movingDto = gson.fromJson(json, MovingDto.class);
-        if(movingDto.toLatitude!=null&&movingDto.toLongitude!=null)
-        {
-            //定义Maker坐标点
-            LatLng point = new LatLng(movingDto.toLatitude, movingDto.toLongitude);
-            //构建Marker图标
-            BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.drawable.loc1);
-            //构建MarkerOption，用于在地图上添加Marker
-            OverlayOptions option = new MarkerOptions()
-                    .position(point)
-                    .icon(bitmap);
-            //在地图上添加Marker，并显示
-            baiduMap.addOverlay(option);
+        if(movingDto.toLatitude!=null&&movingDto.toLongitude!=null) {
+            carLoc = new LatLng(movingDto.toLatitude, movingDto.toLongitude);
+            updateCarLocation();
         }
+    }
+
+
+    /**
+     * 更新车辆的实时位置
+     */
+    public void updateCarLocation()
+    {
+        //构建Marker图标
+        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.drawable.loc1);
+        //构建MarkerOption，用于在地图上添加Marker
+        OverlayOptions option = new MarkerOptions()
+                .position(carLoc)
+                .icon(bitmap);
+        //在地图上添加Marker，并显示
+        baiduMap.addOverlay(option);
     }
 
     /**
@@ -141,27 +289,93 @@ public class LocationFragment extends Fragment {
             baiduMap.setMapStatus(mMapStatusUpdate);
             isFirst=false;
         }
+        myLoc=new LatLng(location.getLatitude(),location.getLongitude());
         baiduMap.setMyLocationEnabled(true);
+        ra=location.getRadius();
+        di=location.getDirection();
         MyLocationData locData = new MyLocationData.Builder()
-                .accuracy(location.getRadius())
+                .accuracy(ra)
                 // 此处设置开发者获取到的方向信息，顺时针0-360
-                .direction(location.getDirection()).latitude(location.getLatitude())
+                .direction(di).latitude(location.getLatitude())
                 .longitude(location.getLongitude()).build();
         baiduMap.setMyLocationData(locData);
     }
 
-    void updateNotificationUI()
+    /**
+     * 绘制第一次我的位置
+     */
+    void updateMyFirstLocation()
     {
+        if(isFirst)
+        {
+            //设定中心点坐标
+            LatLng cent = new LatLng(myLoc.latitude,myLoc.longitude);
+            //定义地图状态
+            MapStatus mMapStatus = new MapStatus.Builder()
+                    .target(cent)
+                    .build();
+            //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
+            MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
+            baiduMap.setMapStatus(mMapStatusUpdate);
+            isFirst=false;
+        }
+        myLoc=new LatLng(myLoc.latitude,myLoc.longitude);
+        baiduMap.setMyLocationEnabled(true);
+        MyLocationData locData = new MyLocationData.Builder()
+                .accuracy(ra)
+                // 此处设置开发者获取到的方向信息，顺时针0-360
+                .direction(di).latitude(myLoc.latitude)
+                .longitude(myLoc.longitude).build();
+        baiduMap.setMyLocationData(locData);
+    }
+
+    void updateRoute()
+    {
+        if(points.size()==0)
+        {
+            return;
+        }
+        //设定中心点坐标
+        LatLng cent = new LatLng(points.get(points.size()/2).latitude,points.get(points.size()/2).longitude);
+        //定义地图状态
+        MapStatus mMapStatus = new MapStatus.Builder()
+                .target(cent)
+                .build();
+        //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
+        MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
+        //改变地图状态
+        baiduMap.setMapStatus(mMapStatusUpdate);
+        //设置折线的属性
+        OverlayOptions overlayOptions = new PolylineOptions()
+                .width(10)
+                .color(0xAA6495ED)
+                .points(points);
+        //在地图上绘制折线
+        //mPloyline 折线对象
+        Overlay polyline = baiduMap.addOverlay(overlayOptions);
+        polyLines.add(polyline);
+    }
+    /**
+     * 控制位移提醒的开关，UI变化
+     */
+    public void updateNotificationUI()//简单的反转
+    {
+        Message msg=new Message();
+        msg.what=4;
         if(!MainActivity.realAlertOn)
         {
-            round.setImageDrawable(getResources().getDrawable(R.drawable.round_open));
+            round.setImageResource(R.drawable.round_open);
+            moveNotification.setImageResource(R.drawable.notification_on);
+            msg.obj="OPEN_MOVING_ALERT";
             MainActivity.realAlertOn=true;
         }
         else
         {
-            round.setImageDrawable(getResources().getDrawable(R.drawable.round));
-            moveNotification.setImageDrawable(getResources().getDrawable(R.drawable.move_notification));
+            round.setImageResource(R.drawable.round);
+            moveNotification.setImageResource(R.drawable.move_notification);
+            msg.obj="CLOSE_MOVING_ALERT";
             MainActivity.realAlertOn=false;
         }
+        handler.sendMessage(msg);
     }
 }

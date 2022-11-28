@@ -175,7 +175,7 @@ public class PointFragment extends Fragment implements View.OnClickListener{
         //设置折线的属性
         OverlayOptions mOverlayOptions = new PolylineOptions()
                 .width(10)
-                .color(0xAAFF0000)
+                .color(0xAA6495ED)
                 .points(data);
         //在地图上绘制折线
         //mPloyline 折线对象

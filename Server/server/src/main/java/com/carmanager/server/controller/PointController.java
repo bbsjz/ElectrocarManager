@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
 
-@Api("历史数据管理")
+@Api("历史轨迹数据管理")
 @RestController
 @RequestMapping("point")
 public class PointController {

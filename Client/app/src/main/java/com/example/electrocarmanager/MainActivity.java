@@ -2,15 +2,21 @@ package com.example.electrocarmanager;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,7 +30,7 @@ import android.widget.TextView;
 
 import com.baidu.location.BDLocation;
 import com.baidu.mapapi.model.LatLng;
-import com.example.electrocarmanager.Entity.Notification;
+import com.example.electrocarmanager.Entity.Notify;
 import com.example.electrocarmanager.Fragment.LocationFragment;
 import com.example.electrocarmanager.Fragment.PointFragment;
 import com.example.electrocarmanager.Fragment.RealTimePointFragment;
@@ -35,12 +41,11 @@ import com.example.electrocarmanager.Location.CarLocation.WebsocketClient;
 import com.example.electrocarmanager.Location.MyLocation.MyLocationListener;
 import com.example.electrocarmanager.Location.MyLocation.MyLocationService;
 import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;
-import com.example.electrocarmanager.Utils.DateUtils;
 
 import java.net.URISyntaxException;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements NotificationRecyclerViewAdapter.ItemClickListener,
+public class MainActivity extends FragmentActivity implements NotificationRecyclerViewAdapter.ItemClickListener,
         PointFragment.ArrowClickListener, RealTimePointFragment.RealArrowClickListener,TrackFragment.RealTimeClickListener{
 
     //三个fragment
@@ -49,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
     TrackFragment trackFragment;
     RealTimePointFragment realTimePointFragment;
     FragmentManager fragmentManager;
+
+    NotificationManager notificationManager;
 
     //底部
     RadioButton open;
@@ -62,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
     TextView last;
     TextView distance;
 
-    final String SERVER_ADDRESS= "ws://10.128.160.17:8081/websocket";
+    final String SERVER_ADDRESS= "ws://192.168.43.120:8081/websocket";
 
     //定位服务
     MyLocationService myLocationService;
@@ -96,6 +103,22 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
         if(websocketClient!=null&&websocketClient.isOpen())
         {
             websocketClient.close();
+        }
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent)
+    {
+        super.onNewIntent(intent);
+        String requestCode=intent.getStringExtra("requestCode");
+        if(requestCode==null)
+        {
+            return;
+        }
+        else if(requestCode.equals("moving"))
+        {
+            fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
         }
     }
 
@@ -134,7 +157,8 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
 
     //获取权限之后的回调函数
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1: {
@@ -174,22 +198,40 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
                     case 1:
                     {
                         locationFragment.updateMyLocation((BDLocation) msg.obj);
-                        return;
+                        break;
                     }
                     //2表示车辆定位服务返回了结果
                     case 2:
                     {
-                        locationFragment.updateCarLocation((String) msg.obj);
+                        locationFragment.parseJsonAndUpdateCarLocation((String) msg.obj);
                         trackFragment.getNowMsg((String) msg.obj);
+                        break;
                     }
                     //3表示实时位移信息发生更新
                     case 3:
                     {
                         updateRealPointDetail(trackFragment.points,trackFragment.notification);
+                        break;
+                    }
+                    //4表示开启或者关闭位移提醒，需要向服务器发送消息
+                    case 4:
+                    {
+                        websocketClient.sendMsg((String) msg.obj);
+                        break;
+                    }
+                    //5表示开锁关锁导致自动改变位移提醒状态
+                    case 5:
+                    {
+                        locationFragment.updateNotificationUI();
+                        break;
+                    }
+                    //6表示发生了移动，需要进行通知
+                    case 6:
+                    {
+                        notifyLocationChange();
                     }
                 }
             }
-
         };
     }
 
@@ -220,10 +262,11 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
     void initFragment()
     {
         fragmentManager =getSupportFragmentManager();
+        notificationManager= (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         //实例化四个fragment，其中，默认一开始显示开锁页面
-        switchFragment=new SwitchFragment();
-        locationFragment=new LocationFragment();
+        switchFragment=new SwitchFragment(handler);
+        locationFragment=new LocationFragment(handler);
         trackFragment=new TrackFragment(this,handler);
         realTimePointFragment=new RealTimePointFragment(this);
 
@@ -258,6 +301,7 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
         });
     }
 
+    //关闭程序
     public void killAppProcess()
     {
         //先杀掉相关进程最后杀掉主进程
@@ -274,8 +318,34 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
         System.exit(0);
     }
 
+    //发出车辆移动通知
+    void notifyLocationChange()
+    {
+        String id = "1"; //自定义设置通道ID属性
+        String description = "通知车辆移动信息";//自定义设置通道描述属性
+        int importance = NotificationManager.IMPORTANCE_HIGH;//通知栏管理重要提示消息声音设定
+        NotificationChannel mChannel = null;//建立通知栏通道类（需要有ID，重要属性）
+        Intent intent=new Intent(getApplicationContext(),MainActivity.class);
+        intent.putExtra("requestCode","moving");
+        PendingIntent pendingIntent=PendingIntent.getActivity(getApplicationContext(),
+                0,intent,PendingIntent.FLAG_IMMUTABLE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            mChannel = new NotificationChannel(id, description, importance);
+            notificationManager.createNotificationChannel(mChannel);////最后在notificationmanager中创建该通知渠道
+            Notification notification = new Notification.Builder(getApplicationContext(), id)//创建Notification对象。
+                    .setContentTitle("移动提醒")  //设置通知标题
+                    .setSmallIcon(R.drawable.notify)//设置通知小图标
+                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.loc))//设置通知大图标
+                    .setContentText("车辆位置发生移动，请及时关注")//设置通知内容
+                    .setAutoCancel(true)//设置自动删除通知
+                    .setContentIntent(pendingIntent)
+                    .build();//运行
+            notificationManager.notify((int) System.currentTimeMillis(), notification); //通知栏保留多条通知
+        }
+    }
+
     @Override
-    public void onItemClick(Notification notification) {
+    public void onItemClick(Notify notification) {
         PointFragment pointFragment=new PointFragment(this,notification.id);
         fragmentManager.beginTransaction().replace(R.id.fragment,pointFragment).commit();
 
@@ -292,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
         point.setVisibility(View.INVISIBLE);
     }
 
-    void updatePointDetail(Notification notification)
+    void updatePointDetail(Notify notification)
     {
         time.setText(notification.time);
         from.setText("移动起始位置:"+notification.from);
@@ -313,7 +383,7 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
         point.setVisibility(View.VISIBLE);
     }
 
-    void updateRealPointDetail(List<LatLng> data,Notification notification)
+    void updateRealPointDetail(List<LatLng> data, Notify notification)
     {
         realTimePointFragment.updateDataAndMap(data);
         from.setText("移动起始位置:"+notification.from);
@@ -330,4 +400,5 @@ public class MainActivity extends AppCompatActivity implements NotificationRecyc
         tabs.setVisibility(View.VISIBLE);
         point.setVisibility(View.INVISIBLE);
     }
+
 }

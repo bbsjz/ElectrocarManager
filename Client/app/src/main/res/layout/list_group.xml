@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        android:paddingTop="60dp"
+        android:paddingTop="50dp"
         android:clipToPadding="false"
         tools:layout_editor_absoluteX="195dp"
         tools:layout_editor_absoluteY="0dp" />

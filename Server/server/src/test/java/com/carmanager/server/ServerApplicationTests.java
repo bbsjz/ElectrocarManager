@@ -37,5 +37,6 @@ class ServerApplicationTests {
 //            }
 //            long du=1;
 //            System.out.println(DateUtils.convertMillis(du));
+                System.out.println("{"+"\"id\":"+1+","+"\"distance\":"+88.0+"}");
         }
 }

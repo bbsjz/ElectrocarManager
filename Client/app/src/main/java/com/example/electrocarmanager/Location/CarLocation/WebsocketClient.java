@@ -100,4 +100,9 @@ public class WebsocketClient extends AbstractWebsocketClient {
     public boolean isOpen() {
         return channel.isOpen();
     }
+
+    public void sendMsg(String msg)
+    {
+        handler.sendMsgToServer(msg);
+    }
 }
