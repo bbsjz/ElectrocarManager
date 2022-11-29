@@ -138,6 +138,8 @@ public class MoveUtils {
         if (nowMoving && moveCount >= movingThreshold) {
             lastMovingPoint = point;
         }
+        if (true)
+            return;
         long notMovingTime = point.getCreateTime().getTime() -
                 lastMovingPoint.getCreateTime().getTime();
 

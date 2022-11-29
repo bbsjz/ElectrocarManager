@@ -10,6 +10,12 @@ import org.springframework.web.context.request.WebRequest;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler({NotFoundException.class})
+    protected ResponseEntity<Object> handleNotFoundException(Exception e, WebRequest request) {
+        ExceptionResponse response = new ExceptionResponse(e);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler({NotSupportArgumentException.class})
     protected ResponseEntity<Object> handleBadRequestException(Exception e, WebRequest request) {
         ExceptionResponse response = new ExceptionResponse(e);

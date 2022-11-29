@@ -10,10 +10,26 @@ import org.springframework.stereotype.Service;
 @Service
 public interface IMoveService {
 
+    /**
+     * 新增或者更新Move
+     * @param move 新的Move
+     * @return 添加到数据库后的Move，带有唯一的Id
+     */
     Move saveMove(Move move);
 
-    Page<Move> getAllMove(long pageNum, long pageSize);
+    /**
+     * 分页按开始移动时间倒序获取Move对象
+     * @param pageNum 页数
+     * @param pageSize 页大小
+     * @return 分页获取结果
+     */
+    Page<Move> getAllMove(int pageNum, int pageSize);
 
+    /**
+     * 按Id获取对应的Move
+     * @param id Move的Id
+     * @return 找到的Move
+     */
     Move getMove(long id);
 
 }

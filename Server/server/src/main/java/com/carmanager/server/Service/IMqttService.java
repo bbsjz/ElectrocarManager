@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 @Service
 public interface IMqttService {
 
+    /**
+     * 遥控电动车开关与启停
+     * @param command 指令
+     */
     void controlCar(Command command);
 
 }
