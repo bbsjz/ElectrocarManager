@@ -19,6 +19,8 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
 public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> {
 
+    Channel channel;//建立连接的通道
+
     public static Handler handler;
 
     private static final Logger log = LoggerFactory.getLogger(WebsocketClientHandler.class);
@@ -37,8 +39,6 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
      * 任务上下文
      */
     private final WebsocketContext websocketContext;
-
-    private Channel channel;
 
     public WebsocketClientHandler(WebSocketClientHandshaker webSocketClientHandshaker,
                                   WebsocketContext websocketContext,Handler handler) {
@@ -143,5 +143,15 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         log.info("监控触发异常=>{}", cause.getMessage(), cause);
+    }
+
+    public void sendMsgToServer(String msg)
+    {
+        if(channel==null)
+        {
+            return;
+        }
+        TextWebSocketFrame text=new TextWebSocketFrame(msg);
+        channel.writeAndFlush(text);
     }
 }

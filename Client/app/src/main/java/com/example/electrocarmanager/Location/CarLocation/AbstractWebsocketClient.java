@@ -46,12 +46,21 @@ public abstract class AbstractWebsocketClient implements Closeable {
      * @return:
      */
     public void connect() throws MyException {
-        try {
-            doOpen();
-            doConnect();
-        } catch (Exception e) {
-            throw new MyException ("连接没有成功打开,原因是:{}" + e.getMessage(), e);
-        }
+        new Thread()
+        {
+            @Override
+            public void run()
+            {
+                try {
+                    doOpen();
+                    doConnect();
+                } catch (Exception e) {
+//                    throw new MyException ("连接没有成功打开,原因是:{" + e.getMessage()+"}", e);
+                    int tmp=0;
+                }
+            }
+        }.start();
+
     }
 
 

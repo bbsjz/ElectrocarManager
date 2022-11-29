@@ -10,17 +10,17 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.electrocarmanager.Entity.Notification;
+import com.example.electrocarmanager.Entity.Notify;
 import com.example.electrocarmanager.R;
 
 import java.util.List;
 
 public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<NotificationRecyclerViewAdapter.NotificationHolder> {
-    List<Notification> data;
+    List<Notify> data;
     LayoutInflater inflater;
     ItemClickListener clickListener;
 
-    public NotificationRecyclerViewAdapter(List<Notification> data, Context context)
+    public NotificationRecyclerViewAdapter(List<Notify> data, Context context)
     {
         inflater=LayoutInflater.from(context);
         this.data=data;
@@ -37,7 +37,7 @@ public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<Notifi
     @Override
     public void onBindViewHolder(@NonNull NotificationHolder holder,int position)
     {
-        Notification notification=data.get(position);
+        Notify notification=data.get(position);
         holder.time.setText(notification.time);
         holder.from.setText("移动起始位置:"+notification.from);
         holder.to.setText("移动结束位置:"+notification.to);
@@ -51,7 +51,7 @@ public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<Notifi
         return data.size();
     }
 
-    Notification getItem(int id)
+    Notify getItem(int id)
     {
         return data.get(id);
     }
@@ -85,7 +85,7 @@ public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<Notifi
     }
 
     public interface ItemClickListener {
-        void onItemClick(Notification notification);
+        void onItemClick(Notify notification);
     }
 
 }
