@@ -78,7 +78,7 @@ public class SwitchFragment extends Fragment {
             {
                 unLock.setImageResource(R.drawable.start);
                 sendCommand(2);
-                Toast.makeText(getContext(),"已开锁",Toast.LENGTH_SHORT);
+                Toast.makeText(getContext(),"已开锁",Toast.LENGTH_SHORT).show();
                 ifOpen=1;
 
                 //每次开锁都会自动关闭位移提醒
@@ -95,7 +95,7 @@ public class SwitchFragment extends Fragment {
             {
                 unLock.setImageResource(R.drawable.real_start);
                 sendCommand(3);
-                Toast.makeText(getContext(),"已启动",Toast.LENGTH_SHORT);
+                Toast.makeText(getContext(),"已启动",Toast.LENGTH_SHORT).show();
                 ifOpen=2;
             }
         });
@@ -103,7 +103,7 @@ public class SwitchFragment extends Fragment {
             sendCommand(1);
             unLock.setImageResource(R.drawable.on);
             ifOpen=0;
-            Toast.makeText(getContext(),"已关锁",Toast.LENGTH_SHORT);
+            Toast.makeText(getContext(),"已关锁",Toast.LENGTH_SHORT).show();
 
             //每一次关锁都会自动打开位移提醒
             if(!MainActivity.realAlertOn)

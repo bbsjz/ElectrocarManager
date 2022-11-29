@@ -27,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
 import com.baidu.mapapi.model.LatLng;
@@ -219,10 +220,15 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                         websocketClient.sendMsg((String) msg.obj);
                         break;
                     }
-                    //6表示发生了移动，需要进行通知
+                    //5表示发生了移动，需要进行通知
                     case 5:
                     {
                         notifyLocationChange();
+                        break;
+                    }
+                    case 6://6表示WS连接成功
+                    {
+                        Toast.makeText(getApplicationContext(),"客户端服务端已连接",Toast.LENGTH_LONG).show();
                     }
                 }
             }

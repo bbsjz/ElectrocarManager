@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:background="#eeeeee"
+    android:background="#D4DFF5"
     android:layout_height="match_parent">
 
     <LinearLayout
@@ -14,12 +14,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
         <ImageView
-            android:layout_width="380dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/on"
             android:id="@+id/un_lock" />
         <ImageView
-            android:layout_width="380dp"
+            android:layout_width="wrap_content"
             android:paddingTop="20dp"
             android:layout_height="wrap_content"
             android:src="@drawable/off"

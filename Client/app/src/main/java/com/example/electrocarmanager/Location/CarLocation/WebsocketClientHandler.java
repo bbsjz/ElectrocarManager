@@ -21,7 +21,7 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     Channel channel;//建立连接的通道
 
-    public static Handler handler;
+    public Handler handler;
 
     private static final Logger log = LoggerFactory.getLogger(WebsocketClientHandler.class);
 
@@ -72,6 +72,9 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
         channel = ctx.channel();
         webSocketClientHandshaker.handshake(channel);
         log.info("建立连接");
+        Message msg=new Message();
+        msg.what=6;
+        handler.sendMessage(msg);
     }
 
     /**
