@@ -57,8 +57,6 @@ public class LocationFragment extends Fragment {
 
     MapView mapView;
 
-    boolean isFirst=true;
-
     Handler handler;
 
     LatLng myLoc;
@@ -112,9 +110,8 @@ public class LocationFragment extends Fragment {
     public void onViewCreated(@NonNull View view,@NonNull Bundle savedBundle)
     {
         super.onViewCreated(view,savedBundle);
-        isFirst=true;
         initUI(view);
-        updateMyFirstLocation();
+        updateLocation();
         updateCarLocation();
         updateRoute();
     }
@@ -221,6 +218,7 @@ public class LocationFragment extends Fragment {
     @Override
     public void onDestroy()
     {
+        mapStatus= baiduMap.getMapStatus();
         mapView.onDestroy();
         baiduMap.setMyLocationEnabled(false);
         if(search!=null)
@@ -235,7 +233,6 @@ public class LocationFragment extends Fragment {
         editor.putFloat("carLog",(float) carLoc.longitude);
         editor.putFloat("radius",ra);
         editor.putFloat("direction",di);
-        mapStatus= baiduMap.getMapStatus();
         super.onDestroy();
     }
 
@@ -279,19 +276,6 @@ public class LocationFragment extends Fragment {
         {
             return;
         }
-        if(isFirst)
-        {
-            //设定中心点坐标
-            LatLng cent = new LatLng(location.getLatitude(),location.getLongitude());
-            //定义地图状态
-            MapStatus mMapStatus = new MapStatus.Builder()
-                    .target(cent)
-                    .build();
-            //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
-            MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
-            baiduMap.setMapStatus(mMapStatusUpdate);
-            isFirst=false;
-        }
         myLoc=new LatLng(location.getLatitude(),location.getLongitude());
         baiduMap.setMyLocationEnabled(true);
         ra=location.getRadius();
@@ -307,22 +291,25 @@ public class LocationFragment extends Fragment {
     /**
      * 绘制第一次我的位置
      */
-    void updateMyFirstLocation()
+    void updateLocation()
     {
-        if(isFirst)
-        {
-            //设定中心点坐标
-            LatLng cent = new LatLng(myLoc.latitude,myLoc.longitude);
-            //定义地图状态
-            MapStatus mMapStatus = new MapStatus.Builder()
-                    .target(cent)
-                    .build();
-            //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
-            MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
-            baiduMap.setMapStatus(mMapStatusUpdate);
-            isFirst=false;
-        }
+        MapStatus mMapStatus;
         myLoc=new LatLng(myLoc.latitude,myLoc.longitude);
+        if(mapStatus!=null)
+        {
+            mMapStatus=mapStatus;
+        }
+        else
+        {
+            //定义地图状态，设定中心点坐标
+            mMapStatus = new MapStatus.Builder()
+                    .target(myLoc)
+                    .build();
+        }
+        //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
+        MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
+        baiduMap.setMapStatus(mMapStatusUpdate);
+
         baiduMap.setMyLocationEnabled(true);
         MyLocationData locData = new MyLocationData.Builder()
                 .accuracy(ra)
