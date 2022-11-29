@@ -38,6 +38,7 @@
                 android:gravity="center"
                 android:layout_marginTop="10dp"
                 android:text="开关"
+                android:textColor="#185ABD"
                 android:drawableTop="@drawable/open"
                 />
 
@@ -49,6 +50,7 @@
                 android:button="@null"
                 android:gravity="center"
                 android:layout_marginTop="10dp"
+                android:textColor="#185ABD"
                 android:drawableTop="@drawable/location"
                 android:text="位置" />
 
@@ -60,6 +62,7 @@
                 android:button="@null"
                 android:gravity="center"
                 android:layout_marginTop="10dp"
+                android:textColor="#185ABD"
                 android:drawableTop="@drawable/track"
                 android:text="监测" />
         </RadioGroup>

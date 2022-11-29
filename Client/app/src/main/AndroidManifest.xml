@@ -24,9 +24,9 @@
     <application
         android:name=".App"
         android:allowBackup="true"
-        android:icon="@drawable/loc"
+        android:icon="@drawable/loc2"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/loc"
+        android:roundIcon="@drawable/loc2"
         android:supportsRtl="true"
         android:theme="@style/Theme.ElectrocarManager">
         <activity
@@ -39,7 +39,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MapActivity"/>
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="ZSoWEuQMOmg9H0LNvDx1YZyvqxw49kAh" />

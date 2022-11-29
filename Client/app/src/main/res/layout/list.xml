@@ -26,7 +26,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="发生移动的时间"
-                android:textColor="#000000"
+                android:textColor="#2B7CD3"
                 android:textSize="25dp" />
 
                 <TextView
@@ -35,7 +35,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="起始位置："
-                    android:textColor="#000000"
+                    android:textColor="#41A5EE"
                     android:textSize="18dp" />
                 <TextView
                     android:id="@+id/to"
@@ -43,7 +43,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="终止位置："
-                    android:textColor="#000000"
+                    android:textColor="#41A5EE"
                     android:textSize="18dp" />
             <TextView
                 android:id="@+id/last"
@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="移动持续时间:"
-                android:textColor="#000000"
+                android:textColor="#41A5EE"
                 android:textSize="18dp" />
             <TextView
                 android:id="@+id/distance"
@@ -59,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="移动总距离:"
-                android:textColor="#000000"
+                android:textColor="#41A5EE"
                 android:textSize="18dp" />
         </LinearLayout>
     </LinearLayout>
