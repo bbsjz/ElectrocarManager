@@ -29,7 +29,7 @@ import java.net.URL;
  */
 public class SwitchFragment extends Fragment {
 
-    final String OPERATE_LOCK_ADDRESS="";
+    final String OPERATE_LOCK_ADDRESS="http://192.168.31.23:8080/lock";
 
     Handler handler;
 
@@ -77,7 +77,7 @@ public class SwitchFragment extends Fragment {
             if(ifOpen==0)
             {
                 unLock.setImageResource(R.drawable.start);
-                sendCommand(1);
+                sendCommand(2);
                 Toast.makeText(getContext(),"已开锁",Toast.LENGTH_SHORT);
                 ifOpen=1;
 
@@ -100,7 +100,7 @@ public class SwitchFragment extends Fragment {
             }
         });
         lock.setOnClickListener(v->{
-            sendCommand(2);
+            sendCommand(1);
             unLock.setImageResource(R.drawable.on);
             ifOpen=0;
             Toast.makeText(getContext(),"已关锁",Toast.LENGTH_SHORT);

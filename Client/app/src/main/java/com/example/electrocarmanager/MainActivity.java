@@ -69,7 +69,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     TextView last;
     TextView distance;
 
-    final String SERVER_ADDRESS= "ws://192.168.43.120:8081/websocket";
+    final String SERVER_ADDRESS= "ws://192.168.31.23:8081/websocket";
 
     //定位服务
     MyLocationService myLocationService;
