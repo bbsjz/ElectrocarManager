@@ -1,6 +1,5 @@
 package com.example.electrocarmanager.Fragment;
 
-import android.app.NotificationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -56,7 +55,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
     List<NotifyGroup> data=new ArrayList<>();//历史记录
     public List<LatLng> points=new ArrayList<>();//保留实时移动信息的点集数据
-    public Notify notification;//实时的移动信息
+    public Notify notify;//实时的移动信息
 
     RealTimeClickListener listener;
 
@@ -77,8 +76,6 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
     NotificationRecyclerViewAdapter.ItemClickListener itemClickListener;
     NotificationGroupRecycleAdapter adapter;
-
-    String lastDate=null;
 
     //当前车辆是否处于位移状态
     boolean isMoving =false;
@@ -104,9 +101,9 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
     {
         data=new ArrayList<>();
         initUI(view);
-//        test();
+        test();
         updateMovingMsg();
-//        getOldMsgAndUpdate();
+        getOldMsgAndUpdate();
     }
 
     void initUI(View view)
@@ -181,11 +178,11 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             distance.setText("移动累计总距离:"+0.0);
 
             //保存数据
-            notification.from=getAddress.getAddress();
-            notification.time=DateUtils.toHourAndMinute(movingDto.beginTime);
-            notification.to=getAddress.getAddress();
-            notification.last="00:00:00";
-            notification.distance=0.0;
+            notify.from=getAddress.getAddress();
+            notify.time=DateUtils.toHourAndMinute(movingDto.beginTime);
+            notify.to=getAddress.getAddress();
+            notify.last="00:00:00";
+            notify.distance=0.0;
             points.add(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude));
 
             //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
@@ -221,9 +218,9 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             last.setText("移动累计持续时间:"+DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000));
             distance.setText("移动累计总距离:"+totalDistance);
 
-            notification.to=getAddress.getAddress();
-            notification.last=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
-            notification.distance=totalDistance;
+            notify.to=getAddress.getAddress();
+            notify.last=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
+            notify.distance=totalDistance;
 
             //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
             if(MainActivity.realPointOn)
@@ -243,7 +240,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             move.setVisibility(View.INVISIBLE);
             recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),120),0,0);
 
-            //TODO:直接在本地展示历史数据
+            addToLocal(movingDto);
 
         }
     }
@@ -311,14 +308,13 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             }
         }.start();
     }
+
     /**
      * 将获得的json格式的字符串转为list的数据格式
      */
     void getData(String rowData)
     {
         List<Move> list=gson.fromJson(rowData,new TypeToken<List<Move>>(){}.getType());
-        List<Notify> notifications=new ArrayList<>();
-        NotifyGroup notificationGroup=new NotifyGroup();
         List<Thread> threadsFrom=new ArrayList<>();
         List<Thread> threadsTo=new ArrayList<>();
         List<GetAddress> getsFrom=new ArrayList<>();
@@ -339,14 +335,13 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             threadsTo.add(threadTo);
             getsTo.add(getTo);
         }
-        for(int i=0;i<list.size();i++)
-        {
-            String date= DateUtils.toYearAndMonthAndDate(list.get(i).beginTime);
-            Notify notification=new Notify();
-            notification.time=DateUtils.toHourAndMinute(list.get(i).beginTime)+"-"+DateUtils.toHourAndMinute(list.get(i).endTime);
+        for(int i=0;i<list.size();i++) {
+            String date = DateUtils.toYearAndMonthAndDate(list.get(i).beginTime);
+            Notify notification = new Notify();
+            notification.time = DateUtils.toHourAndMinute(list.get(i).beginTime) + "-" + DateUtils.toHourAndMinute(list.get(i).endTime);
             try {
                 threadsFrom.get(i).join();
-                notification.from=getsFrom.get(i).getAddress();
+                notification.from = getsFrom.get(i).getAddress();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -354,36 +349,59 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
             try {
                 threadsTo.get(i).join();
-                notification.to=getsTo.get(i).getAddress();
+                notification.to = getsTo.get(i).getAddress();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            notification.distance=list.get(i).distance;
-            notification.id=list.get(i).id;
-            notification.last=DateUtils.convertMillis((list.get(i).beginTime.getTime()-list.get(i).endTime.getTime())/1000);
-            if(lastDate==null)
-            {
-                lastDate=date;
-                notificationGroup.date=date;
-                notifications.add(notification);
-            }
-            else if(lastDate==date)
-            {
-                notifications.add(notification);
-            }
-            else
-            {
-                notificationGroup.notifications=notifications;
-                data.add(notificationGroup);
-                notificationGroup.date=date;
-                notifications.clear();
-                notifications.add(notification);
-                lastDate=date;
+            notification.distance = list.get(i).distance;
+            notification.id = list.get(i).id;
+            notification.last = DateUtils.convertMillis((list.get(i).beginTime.getTime() - list.get(i).endTime.getTime()) / 1000);
+            if (data.size() != 0 && data.get(data.size() - 1).date.equals(date)) {
+                data.get(data.size() - 1).notifications.add(notification);
+            } else {
+                NotifyGroup group = new NotifyGroup();
+                group.date = date;
+                List<Notify> li = new ArrayList<>();
+                li.add(notification);
+                group.notifications = li;
+                data.add(group);
             }
         }
-        notificationGroup.notifications=notifications;
-        data.add(notificationGroup);
+    }
+
+
+    void addToLocal(MovingDto move)
+    {
+        //如果此时，列表中已经有日期并且和当天日期一样，那么插入，并且因为是最近的一条数据所以要插入在最前端
+        if(data.size()!=0&&data.get(0).date.equals(DateUtils.toYearAndMonthAndDate(move.beginTime)))
+        {
+            List<Notify> list=data.get(0).notifications;
+            list.add(0,notify);
+            data.get(0).notifications=list;
+        }
+        //如果当前列表中没有数据，或者说当前列表最前端的日期和这条数据的日期不相符合，
+        //那么此时要新建一个日期并且插入，且插入在最前面
+        else
+        {
+            NotifyGroup group=new NotifyGroup();
+            group.date=DateUtils.toYearAndMonthAndDate(move.beginTime);
+            List<Notify> list=new ArrayList<>();
+            list.add(notify);
+            group.notifications=list;
+            data.add(0,group);
+        }
+        int total=0;
+        for(NotifyGroup notifyGroup:data)
+        {
+            total+=notifyGroup.notifications.size();
+        }
+        //如果本地添加后列表的元素刚好是5的倍数+1，则弹出最后一个元素防止下滑再次向服务器请求数据后得到的元素重复
+        if(total%5==1)
+        {
+            data.get(data.size()-1).notifications.remove(data.get(data.size()-1).notifications.size()-1);
+        }
+        updateMovingMsg();
     }
 
     //获取list格式的数据后更新
@@ -395,26 +413,26 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
         recyclerView.setAdapter(adapter);
     }
 
-//    void test() {
-//        data = new ArrayList<>();
-//        Notify notification1 = new Notify(1L,"16:22:23-16:34:57", "武汉大学", "华中科技大学", 1200, "00:12:34");
-//
-//        Notify notification2 = new Notify(2L,"16:27:02-16:37:26", "街道口", "广埠屯", 66, "00:10:24");
-//
-//        NotifyGroup notificationGroup = new NotifyGroup();
-//        notificationGroup.notifications.add(notification1);
-//        notificationGroup.notifications.add(notification2);
-//        notificationGroup.date = "11月6日";
-//
-//        data.add(notificationGroup);
-//
-//        NotifyGroup notificationGroup1 = new NotifyGroup();
-//        notificationGroup1.notifications.add(notification1);
-//        notificationGroup1.notifications.add(notification2);
-//        notificationGroup1.date = "11月7日";
-//
-//        data.add(notificationGroup1);
-//    }
+    void test() {
+        data = new ArrayList<>();
+        Notify notification1 = new Notify(1L,"最近的时间", "武汉大学", "华中科技大学", 1200, "00:12:34");
+
+        Notify notification2 = new Notify(2L,"倒数第二近的时间", "街道口", "广埠屯", 66, "00:10:24");
+
+        NotifyGroup notificationGroup = new NotifyGroup();
+        notificationGroup.notifications.add(notification1);
+        notificationGroup.notifications.add(notification2);
+        notificationGroup.date = "最近的一天";
+
+        data.add(notificationGroup);
+
+        NotifyGroup notificationGroup1 = new NotifyGroup();
+        notificationGroup1.notifications.add(notification1);
+        notificationGroup1.notifications.add(notification2);
+        notificationGroup1.date = "倒数第二近的一天";
+
+        data.add(notificationGroup1);
+    }
 
     //当实时移动信息被点击后执行
     @Override

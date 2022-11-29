@@ -71,9 +71,11 @@ public class LocationFragment extends Fragment {
 
     //UI
     BaiduMap baiduMap;
+    MapStatus mapStatus=null;//全局地图状态
     ImageView navigation;
     ImageView round;
     ImageView moveNotification;
+
 
     public LocationFragment(Handler handler)
     {
@@ -233,6 +235,7 @@ public class LocationFragment extends Fragment {
         editor.putFloat("carLog",(float) carLoc.longitude);
         editor.putFloat("radius",ra);
         editor.putFloat("direction",di);
+        mapStatus= baiduMap.getMapStatus();
         super.onDestroy();
     }
 
@@ -337,10 +340,21 @@ public class LocationFragment extends Fragment {
         }
         //设定中心点坐标
         LatLng cent = new LatLng(points.get(points.size()/2).latitude,points.get(points.size()/2).longitude);
+
+        MapStatus mMapStatus;
+
         //定义地图状态
-        MapStatus mMapStatus = new MapStatus.Builder()
-                .target(cent)
-                .build();
+        if(mapStatus!=null)
+        {
+            mMapStatus=mapStatus;
+        }
+        else
+        {
+            mMapStatus = new MapStatus.Builder()
+                    .target(cent)
+                    .build();
+        }
+
         //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
         MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
         //改变地图状态
@@ -355,6 +369,7 @@ public class LocationFragment extends Fragment {
         Overlay polyline = baiduMap.addOverlay(overlayOptions);
         polyLines.add(polyline);
     }
+
     /**
      * 控制位移提醒的开关，UI变化
      */

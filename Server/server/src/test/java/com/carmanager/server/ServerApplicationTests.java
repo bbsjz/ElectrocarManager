@@ -1,8 +1,12 @@
 package com.carmanager.server;
 
+import com.sun.corba.se.spi.ior.TaggedProfileTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @SpringBootTest
@@ -37,6 +41,15 @@ class ServerApplicationTests {
 //            }
 //            long du=1;
 //            System.out.println(DateUtils.convertMillis(du));
-                System.out.println("{"+"\"id\":"+1+","+"\"distance\":"+88.0+"}");
+//                System.out.println("{"+"\"id\":"+1+","+"\"distance\":"+88.0+"}");
+                List<Integer> list=new ArrayList<>();
+                list.add(1);
+                list.add(2);
+                list.add(3);
+                for(Integer i:list)
+                {
+                        System.out.println(i);
+                }
         }
+
 }

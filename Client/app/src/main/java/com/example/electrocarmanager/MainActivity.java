@@ -210,7 +210,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                     //3表示实时位移信息发生更新
                     case 3:
                     {
-                        updateRealPointDetail(trackFragment.points,trackFragment.notification);
+                        updateRealPointDetail(trackFragment.points,trackFragment.notify);
                         break;
                     }
                     //4表示开启或者关闭位移提醒，需要向服务器发送消息
@@ -377,7 +377,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
         realTimePointFragment.updateDataAndMap(trackFragment.points);
         fragmentManager.beginTransaction().replace(R.id.fragment,realTimePointFragment).commit();
 
-        updateRealPointDetail(trackFragment.points,trackFragment.notification);
+        updateRealPointDetail(trackFragment.points,trackFragment.notify);
 
         tabs.setVisibility(View.INVISIBLE);
         point.setVisibility(View.VISIBLE);
