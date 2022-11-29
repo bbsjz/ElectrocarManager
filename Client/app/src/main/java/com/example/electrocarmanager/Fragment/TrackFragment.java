@@ -193,9 +193,9 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
                 handler.sendMessage(msg);
             }
 
-            //发出通知
+            //发出通知，说明车辆位置发生了移动
             Message msg=new Message();
-            msg.what=6;
+            msg.what=5;
             handler.sendMessage(msg);
         }
         else if(movingDto.alert)//当前正在移动，且之前也在移动

@@ -84,8 +84,10 @@ public class SwitchFragment extends Fragment {
                 //每次开锁都会自动关闭位移提醒
                 if(MainActivity.realAlertOn)
                 {
+                    MainActivity.realAlertOn=false;
                     Message msg=new Message();
-                    msg.what=5;
+                    msg.what=4;
+                    msg.obj="CLOSE_MOVING_ALERT";
                     handler.sendMessage(msg);
                 }
             }
@@ -106,8 +108,10 @@ public class SwitchFragment extends Fragment {
             //每一次关锁都会自动打开位移提醒
             if(!MainActivity.realAlertOn)
             {
+                MainActivity.realAlertOn=true;
                 Message msg=new Message();
-                msg.what=5;
+                msg.what=4;
+                msg.obj="OPEN_MOVING_ALERT";
                 handler.sendMessage(msg);
             }
         });

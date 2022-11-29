@@ -219,14 +219,8 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                         websocketClient.sendMsg((String) msg.obj);
                         break;
                     }
-                    //5表示开锁关锁导致自动改变位移提醒状态
-                    case 5:
-                    {
-                        locationFragment.updateNotificationUI();
-                        break;
-                    }
                     //6表示发生了移动，需要进行通知
-                    case 6:
+                    case 5:
                     {
                         notifyLocationChange();
                     }

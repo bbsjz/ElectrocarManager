@@ -362,6 +362,7 @@ public class LocationFragment extends Fragment {
      */
     public void updateNotificationUI()//简单的反转
     {
+
         Message msg=new Message();
         msg.what=4;
         if(!MainActivity.realAlertOn)
