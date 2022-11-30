@@ -86,7 +86,10 @@ public class ChannelSupervise {
      * @param tws 消息
      */
     public static void send2OpenLocationRemoveAlert(TextWebSocketFrame tws) {
-        alertGroup.writeAndFlush(tws);
+//        alertGroup.writeAndFlush(tws);
+        for (Channel channel : alertGroup) {
+            channel.writeAndFlush(tws);
+        }
     }
 
     /**

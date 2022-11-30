@@ -26,7 +26,8 @@ public class MoveService implements IMoveService {
 
     @Override
     public Move saveMove(Move move) {
-        return repository.save(move);
+        Move pureMove = new Move(move); // transform dto to normal move
+        return repository.save(pureMove);
     }
 
     @Override

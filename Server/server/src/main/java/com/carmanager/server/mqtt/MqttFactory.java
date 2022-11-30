@@ -50,7 +50,7 @@ public class MqttFactory {
             // 重连清除旧消息
             options.setCleanSession(true);
             // 发送心跳包
-            options.setKeepAliveInterval(60);
+            options.setKeepAliveInterval(0);
             options.setUserName(config.USER_NAME);
             options.setPassword(config.PASSWORD.toCharArray());
 
