@@ -59,8 +59,7 @@ public class ChannelSupervise {
      * 删除开启了位移提醒的通道
      * @param channel 删除的通道
      */
-    public static void removeMoveAlert(Channel channel)
-    {
+    public static void removeMoveAlert(Channel channel) {
         alertGroup.remove(channel);
     }
 
@@ -78,7 +77,9 @@ public class ChannelSupervise {
      * @param tws 消息
      */
     public static void send2All(TextWebSocketFrame tws){
-        globalGroup.writeAndFlush(tws);
+        for (Channel channel : globalGroup) {
+            channel.writeAndFlush(tws);
+        }
     }
 
     /**
@@ -86,7 +87,6 @@ public class ChannelSupervise {
      * @param tws 消息
      */
     public static void send2OpenLocationRemoveAlert(TextWebSocketFrame tws) {
-//        alertGroup.writeAndFlush(tws);
         for (Channel channel : alertGroup) {
             channel.writeAndFlush(tws);
         }
