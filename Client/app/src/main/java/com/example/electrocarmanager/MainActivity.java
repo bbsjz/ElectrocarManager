@@ -70,7 +70,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     TextView last;
     TextView distance;
 
-    final String SERVER_ADDRESS= "ws://192.168.31.23:8081/websocket";
+    final String SERVER_ADDRESS= "ws://jp.safengine.xyz:8081/websocket";
 
     //定位服务
     MyLocationService myLocationService;
@@ -125,6 +125,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
 
     void init()
     {
+        
         //设置状态栏为透明
         if (Build.VERSION.SDK_INT >= 21) {
             View decorView = getWindow().getDecorView();
@@ -249,7 +250,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     {
         try {
             websocketClient=new
-                    WebsocketClient(SERVER_ADDRESS,1);
+                    WebsocketClient(SERVER_ADDRESS,1,handler);
             websocketClient.connect();
         } catch (URISyntaxException e) {
             e.printStackTrace();
