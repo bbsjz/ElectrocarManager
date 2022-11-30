@@ -42,9 +42,12 @@ import com.baidu.mapapi.search.route.WalkingRouteResult;
 import com.example.electrocarmanager.Entity.MovingDto;
 import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.DateAdapter;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -53,7 +56,7 @@ import java.util.List;
  */
 public class LocationFragment extends Fragment {
 
-    Gson gson=new Gson();
+    Gson gson=new GsonBuilder().registerTypeAdapter(Date.class,new DateAdapter()).create();
 
     MapView mapView;
 
@@ -73,6 +76,7 @@ public class LocationFragment extends Fragment {
     ImageView navigation;
     ImageView round;
     ImageView moveNotification;
+    List<Overlay> overlays=new ArrayList<>();
 
 
     public LocationFragment(Handler handler)
@@ -221,6 +225,8 @@ public class LocationFragment extends Fragment {
         mapStatus= baiduMap.getMapStatus();
         mapView.onDestroy();
         baiduMap.setMyLocationEnabled(false);
+        overlays.clear();
+        baiduMap=null;
         if(search!=null)
         {
             search.destroy();
@@ -243,10 +249,16 @@ public class LocationFragment extends Fragment {
      */
     public void parseJsonAndUpdateCarLocation(String json)
     {
-        MovingDto movingDto = gson.fromJson(json, MovingDto.class);
-        if(movingDto.toLatitude!=null&&movingDto.toLongitude!=null) {
-            carLoc = new LatLng(movingDto.toLatitude, movingDto.toLongitude);
-            updateCarLocation();
+        try{
+            MovingDto movingDto = gson.fromJson(json, MovingDto.class);
+            if(movingDto.toLatitude!=null&&movingDto.toLongitude!=null) {
+                carLoc = new LatLng(movingDto.toLatitude, movingDto.toLongitude);
+                updateCarLocation();
+            }
+        }
+        catch(Exception ex)
+        {
+            return;
         }
     }
 
@@ -256,14 +268,24 @@ public class LocationFragment extends Fragment {
      */
     public void updateCarLocation()
     {
+        if(baiduMap==null)
+        {
+            return;
+        }
+        if(overlays.size()!=0)
+        {
+            baiduMap.removeOverLays(overlays);
+            overlays.clear();
+        }
         //构建Marker图标
         BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.drawable.loc1);
         //构建MarkerOption，用于在地图上添加Marker
         OverlayOptions option = new MarkerOptions()
-                .position(carLoc)
-                .icon(bitmap);
+                    .position(carLoc)
+                    .icon(bitmap);
         //在地图上添加Marker，并显示
-        baiduMap.addOverlay(option);
+        Overlay overlay=baiduMap.addOverlay(option);
+        overlays.add(overlay);
     }
 
     /**

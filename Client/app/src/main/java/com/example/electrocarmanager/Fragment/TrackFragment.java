@@ -25,9 +25,11 @@ import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.Notification.NotificationGroupRecycleAdapter;
 import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.DateAdapter;
 import com.example.electrocarmanager.Utils.DateUtils;
 import com.example.electrocarmanager.Utils.PxUtils;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
@@ -41,6 +43,7 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -51,11 +54,11 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
     Handler handler;
 
-    Gson gson=new Gson();
+    Gson gson=new GsonBuilder().registerTypeAdapter(Date.class, new DateAdapter()).create();
 
     List<NotifyGroup> data=new ArrayList<>();//历史记录
     public List<LatLng> points=new ArrayList<>();//保留实时移动信息的点集数据
-    public Notify notify;//实时的移动信息
+    public Notify notify=new Notify();//实时的移动信息
 
     RealTimeClickListener listener;
 
@@ -70,6 +73,12 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
     TextView last;
     TextView distance;
 
+    String fromText;
+    String timeText;
+    String toText;
+    String lastText;
+    double distanceText;
+
 
     final String OLD_MOVING_URL="";
     final String STORE_OLD_MOVING_URL="";
@@ -79,8 +88,6 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
     //当前车辆是否处于位移状态
     boolean isMoving =false;
-    //累计移动总距离
-    double totalDistance=0;
 
     public TrackFragment(NotificationRecyclerViewAdapter.ItemClickListener itemClickListener,Handler handler)
     {
@@ -118,6 +125,15 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
         to=move.findViewById(R.id.to);
         last=move.findViewById(R.id.last);
         distance =move.findViewById(R.id.distance);
+        updateUpperUI();
+    }
+
+    void updateUpperUI()
+    {
+        if(move==null)
+        {
+            return;
+        }
         if(MainActivity.realAlertOn)
         {
             alert.setText("位置移动提醒已开启");
@@ -126,6 +142,11 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
                 notMove.setVisibility(View.INVISIBLE);
                 move.setVisibility(View.VISIBLE);
                 recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),250),0,0);
+                from.setText("移动起始位置:"+fromText);
+                time.setText("移动起始时间:"+timeText);
+                to.setText("当前车辆位置:"+toText);
+                last.setText("移动累计持续时间:"+lastText);
+                distance.setText("移动累计总距离:"+distanceText);
             }
             else//没有移动时，显示没有移动
             {
@@ -149,100 +170,100 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
         {
             return;
         }
-        MovingDto movingDto = gson.fromJson(json, MovingDto.class);
-        if(movingDto.alert&&!isMoving)//当前正在移动，且第一次检测到移动
-        {
-            //置标志位为真
-            isMoving =true;
-
-            //更新栏目
-            notMove.setVisibility(View.INVISIBLE);
-            move.setVisibility(View.VISIBLE);
-            move.setOnClickListener(this);
-            recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),250),0,0);
-
-            //填入初始数据
-            GetAddress getAddress=new GetAddress(movingDto.fromLatitude,movingDto.fromLongitude);
-            Thread thread=new Thread(getAddress);
-            thread.start();
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            from.setText("移动起始位置:"+getAddress.getAddress());
-            time.setText("移动起始时间:"+DateUtils.toHourAndMinute(movingDto.beginTime));
-            to.setText("当前车辆位置:"+getAddress.getAddress());
-            last.setText("移动累计持续时间:"+"00:00:00");
-            distance.setText("移动累计总距离:"+0.0);
-
-            //保存数据
-            notify.from=getAddress.getAddress();
-            notify.time=DateUtils.toHourAndMinute(movingDto.beginTime);
-            notify.to=getAddress.getAddress();
-            notify.last="00:00:00";
-            notify.distance=0.0;
-            points.add(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude));
-
-            //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
-            if(MainActivity.realPointOn)
+        try{
+            MovingDto movingDto = gson.fromJson(json, MovingDto.class);
+            if(movingDto.alert&&!isMoving)//当前正在移动，且第一次检测到移动
             {
+                //置标志位为真
+                isMoving =true;
+
+                //更新栏目
+                updateUpperUI();
+
+                //填入初始数据
+                GetAddress getAddress=new GetAddress(movingDto.fromLatitude,movingDto.fromLongitude);
+                Thread thread=new Thread(getAddress);
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                //保存数据
+                notify.from=getAddress.getAddress();
+                notify.time=DateUtils.toHourAndMinute(movingDto.beginTime);
+                notify.to=getAddress.getAddress();
+                notify.last="00:00:00";
+                notify.distance=0.0;
+                points.add(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude));
+                fromText=getAddress.getAddress();
+                timeText=DateUtils.toHourAndMinute(movingDto.beginTime);
+                toText=getAddress.getAddress();
+                lastText="00:00:00";
+                distanceText=0.0;
+
+                updateUpperUI();
+
+                //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
+                if(MainActivity.realPointOn)
+                {
+                    Message msg=new Message();
+                    msg.what=3;
+                    handler.sendMessage(msg);
+                }
+
+                //发出通知，说明车辆位置发生了移动
                 Message msg=new Message();
-                msg.what=3;
+                msg.what=5;
                 handler.sendMessage(msg);
             }
-
-            //发出通知，说明车辆位置发生了移动
-            Message msg=new Message();
-            msg.what=5;
-            handler.sendMessage(msg);
-        }
-        else if(movingDto.alert)//当前正在移动，且之前也在移动
-        {
-            //保存数据
-            points.add(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude));
-            totalDistance += DistanceUtil.getDistance(points.get(points.size()-1),points.get(points.size()-2));
-
-            //更新数据
-            GetAddress getAddress=new GetAddress(movingDto.fromLatitude,movingDto.fromLongitude);
-            Thread thread=new Thread(getAddress);
-            thread.start();
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            to.setText("当前车辆位置:"+getAddress.getAddress());
-            last.setText("移动累计持续时间:"+DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000));
-            distance.setText("移动累计总距离:"+totalDistance);
-
-            notify.to=getAddress.getAddress();
-            notify.last=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
-            notify.distance=totalDistance;
-
-            //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
-            if(MainActivity.realPointOn)
+            else if(movingDto.alert)//当前正在移动，且之前也在移动
             {
-                Message msg=new Message();
-                msg.what=3;
-                handler.sendMessage(msg);
+                //更新数据
+                GetAddress getAddress=new GetAddress(movingDto.toLatitude,movingDto.toLongitude);
+                Thread thread=new Thread(getAddress);
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                //保存数据
+                points.add(new LatLng(movingDto.toLatitude,movingDto.toLongitude));
+                toText=getAddress.getAddress();
+                lastText=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
+                distanceText=movingDto.distance;
+                notify.to=getAddress.getAddress();
+                notify.last=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
+                notify.distance=movingDto.distance;
+
+                updateUpperUI();
+
+                //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
+                if(MainActivity.realPointOn)
+                {
+                    Message msg=new Message();
+                    msg.what=3;
+                    handler.sendMessage(msg);
+                }
+            }
+            else if(isMoving)//车辆的此次移动已经停止
+            {
+                //清空数据避免影响到下一次
+                isMoving =false;
+                points.clear();
+                addToLocal(movingDto);
+                updateMovingMsg();
+                updateUpperUI();
             }
         }
-        else if(isMoving)//车辆的此次移动已经停止
-        {
-            //清空数据避免影响到下一次
-            isMoving =false;
-            totalDistance=0;
-            points.clear();
-            notMove.setVisibility(View.VISIBLE);
-            move.setVisibility(View.INVISIBLE);
-            recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),120),0,0);
+       catch(Exception ex)
+       {
+           return;
+       }
 
-            addToLocal(movingDto);
-
-        }
     }
 
     //子线程请求之前保存的移动数据
