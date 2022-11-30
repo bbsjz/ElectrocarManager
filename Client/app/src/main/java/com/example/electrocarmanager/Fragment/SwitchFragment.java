@@ -29,7 +29,7 @@ import java.net.URL;
  */
 public class SwitchFragment extends Fragment {
 
-    final String OPERATE_LOCK_ADDRESS="";
+    final String OPERATE_LOCK_ADDRESS="https://jp.safengine.xyz/lock";
 
     Handler handler;
 

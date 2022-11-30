@@ -18,7 +18,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
 
 public class WebsocketClient extends AbstractWebsocketClient {
-    public static Handler msgHandler;
+    public Handler msgHandler;
 
     private static final Logger log = LoggerFactory.getLogger(WebsocketClient.class);
 
@@ -34,10 +34,11 @@ public class WebsocketClient extends AbstractWebsocketClient {
 
     private Channel channel;
 
-    public WebsocketClient(String url, int connectionTimeout) throws URISyntaxException, MyException {
+    public WebsocketClient(String url, int connectionTimeout,Handler handler) throws URISyntaxException, MyException {
         super(connectionTimeout);
         this.uri = new URI(url);
         this.port = getPort();
+        this.msgHandler=handler;
     }
 
     /**

@@ -125,9 +125,10 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
         if (frame instanceof TextWebSocketFrame) //接收到文本消息
         {
             TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
+            String message=textFrame.text();
             Message json=new Message();
             json.what=2;
-            json.obj=msg;
+            json.obj=message;
             handler.sendMessage(json);
             // ...自定义
         } else if (frame instanceof CloseWebSocketFrame) //接收到关闭帧
