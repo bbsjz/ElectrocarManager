@@ -118,7 +118,7 @@ public class MoveUtils {
         if (lastPoint == null) {
             lastPoint = point;
             beginMovingPoint = null;
-            lastMovingPoint = null;
+            lastMovingPoint = point;
             moving = false;
             distance = 0;
             return;
@@ -138,8 +138,6 @@ public class MoveUtils {
         if (nowMoving && moveCount >= movingThreshold) {
             lastMovingPoint = point;
         }
-        if (true)
-            return;
         long notMovingTime = point.getCreateTime().getTime() -
                 lastMovingPoint.getCreateTime().getTime();
 
