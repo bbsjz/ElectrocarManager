@@ -4,6 +4,7 @@ import com.sun.corba.se.spi.ior.TaggedProfileTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -20,16 +21,13 @@ class ServerApplicationTests {
         @Test
         void gsonTest()
         {
+                String pass = "admin";
 
-//               String a="123456";
-//               System.out.println(a.substring(1,a.length()-1));
-                try {
-                        Date d=new SimpleDateFormat("MMM dd, yyyy, hh:mm:ss aa",Locale.ENGLISH).parse("Nov 30, 2022, 1:42:20 PM");
-                        System.out.println(d);
-                } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                }
+                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                final String passHash = encoder.encode(pass);
+                System.out.println(passHash);
 
-
+                final boolean matches = encoder.matches(pass, passHash);
+                System.out.println(matches);
         }
 }

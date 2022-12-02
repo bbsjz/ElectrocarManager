@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @Api("开关锁控制")
 @RestController
 @RequestMapping("lock")
-public class    LockController {
+public class  LockController {
 
     final IMqttService mqttService;
 

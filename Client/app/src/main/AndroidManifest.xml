@@ -32,7 +32,10 @@
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
-            android:launchMode="singleTask"
+            android:launchMode="singleTask">
+
+        </activity>
+        <activity android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,7 +46,8 @@
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="ZSoWEuQMOmg9H0LNvDx1YZyvqxw49kAh" />
-        <!--手机定位服务，确认自己当前位置-->
+
+        <!--手机定位服务，获得自身当前位置-->
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"

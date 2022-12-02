@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ElectrocarManager</string>
+    <string name="WS_SERVER_ADDRESS">ws://jp.safengine.xyz:8081/websocket</string>
+    <string name="LOGIN_URL"></string>
 </resources>

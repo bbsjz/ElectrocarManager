@@ -4,7 +4,7 @@ import android.app.Application;
 
 import com.baidu.location.LocationClient;
 import com.baidu.mapapi.SDKInitializer;
-import com.example.electrocarmanager.Location.MyLocation.MyLocationService;
+import com.example.electrocarmanager.Service.MyLocationService.MyLocationService;
 
 public class App extends Application {
     MyLocationService myLocationService;

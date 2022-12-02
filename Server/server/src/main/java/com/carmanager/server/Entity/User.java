@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Proxy;
 
 import javax.persistence.*;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @ApiModel("用户")
+@Proxy(lazy = false)
 @Entity
 public class User {
 

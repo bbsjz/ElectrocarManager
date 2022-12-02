@@ -15,12 +15,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.baidu.mapapi.model.LatLng;
-import com.baidu.mapapi.utils.DistanceUtil;
 import com.example.electrocarmanager.Entity.Move;
 import com.example.electrocarmanager.Entity.MovingDto;
 import com.example.electrocarmanager.Entity.Notify;
 import com.example.electrocarmanager.Entity.NotifyGroup;
-import com.example.electrocarmanager.Location.CarLocation.GetAddress;
+import com.example.electrocarmanager.Service.CarLocationService.GetAddress;
 import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.Notification.NotificationGroupRecycleAdapter;
 import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;

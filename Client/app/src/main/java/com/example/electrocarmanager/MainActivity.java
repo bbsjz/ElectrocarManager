@@ -37,10 +37,10 @@ import com.example.electrocarmanager.Fragment.PointFragment;
 import com.example.electrocarmanager.Fragment.RealTimePointFragment;
 import com.example.electrocarmanager.Fragment.SwitchFragment;
 import com.example.electrocarmanager.Fragment.TrackFragment;
-import com.example.electrocarmanager.Location.CarLocation.MyException;
-import com.example.electrocarmanager.Location.CarLocation.WebsocketClient;
-import com.example.electrocarmanager.Location.MyLocation.MyLocationListener;
-import com.example.electrocarmanager.Location.MyLocation.MyLocationService;
+import com.example.electrocarmanager.Service.CarLocationService.MyException;
+import com.example.electrocarmanager.Service.CarLocationService.WebsocketClient;
+import com.example.electrocarmanager.Service.MyLocationService.MyLocationListener;
+import com.example.electrocarmanager.Service.MyLocationService.MyLocationService;
 import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;
 
 import java.net.URISyntaxException;
@@ -70,7 +70,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     TextView last;
     TextView distance;
 
-    final String SERVER_ADDRESS= "ws://jp.safengine.xyz:8081/websocket";
+    public final String WS_SERVER_ADDRESS = "ws://jp.safengine.xyz:8081/websocket";
 
     //定位服务
     MyLocationService myLocationService;
@@ -79,12 +79,14 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
 
 
     public static Handler handler;
+    public static String token;//token，全局共享
     public static boolean realPointOn=false;//是否正处在实时轨迹界面
     public static boolean realAlertOn=false;//当前是否开启实时位移提醒
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        token=getIntent().getStringExtra("token");
         setContentView(R.layout.activity_main);
         init();
     }
@@ -127,11 +129,11 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     {
         
         //设置状态栏为透明
-        if (Build.VERSION.SDK_INT >= 21) {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN );
-            getWindow().setStatusBarColor(Color.TRANSPARENT);
-        }
+//        if (Build.VERSION.SDK_INT >= 21) {
+//            View decorView = getWindow().getDecorView();
+//            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN );
+//            getWindow().setStatusBarColor(Color.TRANSPARENT);
+//        }
         if(!checkPermission())
         {
             return;
@@ -250,7 +252,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     {
         try {
             websocketClient=new
-                    WebsocketClient(SERVER_ADDRESS,1,handler);
+                    WebsocketClient(WS_SERVER_ADDRESS,1,handler);
             websocketClient.connect();
         } catch (URISyntaxException e) {
             e.printStackTrace();

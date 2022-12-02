@@ -69,6 +69,7 @@ public class LocationFragment extends Fragment {
     RoutePlanSearch search;
     List<LatLng> points=new ArrayList<>();//路线规划展示的路径
     List<Overlay> polyLines =new ArrayList<>();//存储路线
+    boolean ifFirst=true;
 
     //UI
     BaiduMap baiduMap;
@@ -88,19 +89,22 @@ public class LocationFragment extends Fragment {
     public void onCreate(Bundle bundle)
     {
         super.onCreate(bundle);
-        //获取最近一次使用时我和车的位置，若是第一次使用则设置默认值
-        SharedPreferences preferences=getContext().getSharedPreferences("lastLoc", Context.MODE_PRIVATE);
-        double myLat=preferences.getFloat("myLat",30.5f);
-        double myLog=preferences.getFloat("myLog",114.3f);
-        double carLat=preferences.getFloat("carLat",30.45f);
-        double carLog=preferences.getFloat("carLog",114.25f);
-        float radius=preferences.getFloat("radius",30.0f);
-        float direction=preferences.getFloat("direction",30.0f);
-        myLoc=new LatLng(myLat,myLog);
-        carLoc=new LatLng(carLat,carLog);
-        ra=radius;
-        di=direction;
-
+        if(ifFirst)
+        {
+            //获取最近一次使用时我和车的位置，若是第一次使用则设置默认值
+            SharedPreferences preferences=getContext().getSharedPreferences("lastLoc", Context.MODE_PRIVATE);
+            double myLat=preferences.getFloat("myLat",30.5f);
+            double myLog=preferences.getFloat("myLog",114.3f);
+            double carLat=preferences.getFloat("carLat",30.45f);
+            double carLog=preferences.getFloat("carLog",114.25f);
+            float radius=preferences.getFloat("radius",30.0f);
+            float direction=preferences.getFloat("direction",30.0f);
+            myLoc=new LatLng(myLat,myLog);
+            carLoc=new LatLng(carLat,carLog);
+            ra=radius;
+            di=direction;
+            ifFirst=false;
+        }
     }
 
     @Override
@@ -239,6 +243,7 @@ public class LocationFragment extends Fragment {
         editor.putFloat("carLog",(float) carLoc.longitude);
         editor.putFloat("radius",ra);
         editor.putFloat("direction",di);
+        editor.commit();
         super.onDestroy();
     }
 
