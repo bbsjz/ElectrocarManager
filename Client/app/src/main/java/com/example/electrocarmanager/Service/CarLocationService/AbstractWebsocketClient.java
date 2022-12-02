@@ -1,4 +1,4 @@
-package com.example.electrocarmanager.Location.CarLocation;
+package com.example.electrocarmanager.Service.CarLocationService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -29,7 +29,7 @@ import java.net.URL;
  */
 public class SwitchFragment extends Fragment {
 
-    final String OPERATE_LOCK_ADDRESS="https://jp.safengine.xyz/lock";
+    final String OPERATE_LOCK_ADDRESS="http://192.168.43.120:8080/lock";
 
     Handler handler;
 
@@ -127,14 +127,9 @@ public class SwitchFragment extends Fragment {
                     URL url = new URL(OPERATE_LOCK_ADDRESS+"?id="+command);
                     HttpURLConnection httpURLConnection=(HttpURLConnection) url.openConnection();
                     httpURLConnection.setRequestMethod("GET");
+                    httpURLConnection.setRequestProperty("Authorization","Bearer  "+MainActivity.token);
                     InputStream in=httpURLConnection.getInputStream();
-//                    BufferedReader reader=new BufferedReader(new InputStreamReader(in));
-//                    StringBuilder builder=new StringBuilder();
-//                    String oneLine;
-//                    while((oneLine=reader.readLine())!=null)
-//                    {
-//                        builder.append(oneLine);
-//                    }
+                    int tmp=httpURLConnection.getResponseCode();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (IOException e) {

@@ -4,11 +4,13 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.springframework.stereotype.Component;
 
 import java.util.logging.Logger;
 
+@Component
 public class WebSocketServer {
-    private static final Logger logger=Logger.getLogger("WB");
+    private static final Logger logger=Logger.getLogger("websocket");
     public static void init(){
         logger.info("正在启动websocket服务器");
         NioEventLoopGroup boss=new NioEventLoopGroup();

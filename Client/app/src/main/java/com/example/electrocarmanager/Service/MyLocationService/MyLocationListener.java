@@ -1,4 +1,4 @@
-package com.example.electrocarmanager.Location.MyLocation;
+package com.example.electrocarmanager.Service.MyLocationService;
 
 import android.os.Handler;
 import android.os.Message;

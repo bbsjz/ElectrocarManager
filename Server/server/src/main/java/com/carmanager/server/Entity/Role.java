@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
@@ -23,7 +24,8 @@ public class Role {
     String name;
 
     @ApiModelProperty("角色权限")
-    String authority;
+    @Convert(converter = RoleConverter.class)
+    List<String> authorities;
 
     @ApiModelProperty("角色对应的用户")
     @ManyToMany(mappedBy = "roles")
