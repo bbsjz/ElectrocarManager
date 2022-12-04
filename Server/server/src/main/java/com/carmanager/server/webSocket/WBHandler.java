@@ -93,12 +93,10 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
                 + ctx.channel().id() + "服务端已经收到：" + request);
         // 群发
         ChannelSupervise.send2All(tws);
-        // 返回【谁发的发给谁】
-        // ctx.channel().writeAndFlush(tws);
     }
 
     /**
-     * 唯一的一次http请求，用于创建websocket
+     * 创建websocket
      * */
     private void handleHttpRequest(ChannelHandlerContext ctx,
                                    FullHttpRequest req) {
@@ -120,6 +118,7 @@ public class WBHandler extends SimpleChannelInboundHandler<Object> {
             handshaker.handshake(ctx.channel(), req);
         }
     }
+
     /**
      * 拒绝不合法的请求，并返回错误信息
      * */

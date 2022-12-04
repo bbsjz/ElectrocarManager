@@ -29,7 +29,7 @@ import java.net.URL;
  */
 public class SwitchFragment extends Fragment {
 
-    final String OPERATE_LOCK_ADDRESS="http://192.168.43.120:8080/lock";
+    final String OPERATE_LOCK_ADDRESS="http://192.168.31.23:8080/lock";
 
     Handler handler;
 
