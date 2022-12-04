@@ -9,7 +9,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/date"
             android:text="日期"
-            android:padding="8dp"
+            android:padding="5dp"
             android:textSize="30dp"
             android:textColor="#185ABD"
             android:layout_marginLeft="10dp"

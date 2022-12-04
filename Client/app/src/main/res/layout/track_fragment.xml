@@ -4,38 +4,24 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#D4DFF5">
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="30dp"
-        android:textColor="#103F91"
-        android:paddingLeft="10dp"
-        android:paddingTop="5dp"
-        android:background="#ffffff"
-        android:text="位置移动提醒已开启"
-        android:id="@+id/alert"
-        app:layout_constraintTop_toTopOf="parent"/>
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:background="#000000"
-        android:id="@+id/line"
-        app:layout_constraintTop_toBottomOf="@id/alert"/>
-    <include layout="@layout/move"
-        android:id="@+id/move"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="invisible"
-        app:layout_constraintTop_toBottomOf="@id/line"/>
-    <include layout="@layout/not_move"
-        android:id="@+id/not_move"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/line"/>
-<androidx.recyclerview.widget.RecyclerView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingLeft="5dp"
-    android:paddingTop="120dp"
-    android:id="@+id/notifications"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:textSize="30dp"
+            android:paddingBottom="10dp"
+            android:gravity="center"
+            android:textColor="#103F91"
+            android:paddingTop="5dp"
+            android:background="@drawable/half_tangle_blue"
+            android:text="位置移动提醒已开启"
+            android:id="@+id/alert"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="5dp"
+            android:id="@+id/notifications"
+            android:paddingTop="55dp"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

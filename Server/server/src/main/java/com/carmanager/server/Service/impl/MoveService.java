@@ -5,6 +5,7 @@ import com.carmanager.server.Entity.DateMove;
 import com.carmanager.server.Entity.Move;
 import com.carmanager.server.Service.IMoveService;
 import com.carmanager.server.exception.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

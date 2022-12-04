@@ -1,10 +1,15 @@
 package com.carmanager.server.Utils;
 
+import com.carmanager.server.Entity.Move;
 import com.carmanager.server.Entity.Point;
+import com.carmanager.server.Service.impl.MoveService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+@Component
 public class MoveUtils {
 
     private boolean moving = false; //当前是否在移动状态
@@ -18,6 +23,8 @@ public class MoveUtils {
     private double distance; //移动总长度
 
     private boolean needToRecord; //这条移动记录是否可见
+
+    private boolean stopAndShouldBeStore;//判断已经停止，且这条记录应该被保存
 
     private final int buffCapacity = 5; //缓冲区长度
 
@@ -73,12 +80,31 @@ public class MoveUtils {
         return moving;
     }
 
+
     /**
      * 得到开始移动的点
      * @return 开始移动的点
      */
     public Point getBeginMovingPoint() {
         return beginMovingPoint;
+    }
+
+    /**
+     * 设置是否需要保存的标志位
+     * @param b 是否需要保存
+     */
+    public void setStopAndShouldBeStore(boolean b)
+    {
+        stopAndShouldBeStore=b;
+    }
+
+    /**
+     * 返回是否需要保存本条记录
+     * @return 是否需要保存本条记录
+     */
+    public boolean getStopAndNeedToStore()
+    {
+        return stopAndShouldBeStore;
     }
 
     /**
@@ -151,6 +177,10 @@ public class MoveUtils {
             // 判断为结束移动
             moving = false;
             beginMovingPoint = null;
+            if(needToRecord)
+            {
+                stopAndShouldBeStore=true;
+            }
             needToRecord = false;
         }
 

@@ -21,7 +21,7 @@ public class MoveController {
     @ApiOperation("按时间倒序获取车辆移动信息")
     @GetMapping("")
     public Page<Move> getAllMove(@RequestParam(defaultValue = "0") Integer pageNum,
-                       @RequestParam(defaultValue = "10") Integer pageSize) {
+                       @RequestParam(defaultValue = "5") Integer pageSize) {
         return moveService.getAllMove(pageNum, pageSize);
     }
 

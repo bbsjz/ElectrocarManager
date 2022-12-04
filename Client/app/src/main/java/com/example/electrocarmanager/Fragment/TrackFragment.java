@@ -19,11 +19,13 @@ import com.example.electrocarmanager.Entity.Move;
 import com.example.electrocarmanager.Entity.MovingDto;
 import com.example.electrocarmanager.Entity.Notify;
 import com.example.electrocarmanager.Entity.NotifyGroup;
+import com.example.electrocarmanager.NetWork.OldMoveMsgGet;
 import com.example.electrocarmanager.Service.CarLocationService.GetAddress;
 import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.Notification.NotificationGroupRecycleAdapter;
 import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.DataBaseDateAdapter;
 import com.example.electrocarmanager.Utils.DateAdapter;
 import com.example.electrocarmanager.Utils.DateUtils;
 import com.example.electrocarmanager.Utils.PxUtils;
@@ -31,16 +33,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -49,44 +52,33 @@ import java.util.List;
  * @author bbg
  * 在开启位移提醒时，用于显示移动结果的fragment
  */
-public class TrackFragment extends Fragment  implements View.OnClickListener{
+public class TrackFragment extends Fragment  implements View.OnClickListener {
 
     Handler handler;
 
     Gson gson=new GsonBuilder().registerTypeAdapter(Date.class, new DateAdapter()).create();
+    Gson dbGson=new GsonBuilder().registerTypeAdapter(Date.class, new DataBaseDateAdapter()).create();
 
     List<NotifyGroup> data=new ArrayList<>();//历史记录
+    int page=0;//当前在第几页记录
     public List<LatLng> points=new ArrayList<>();//保留实时移动信息的点集数据
     public Notify notify=new Notify();//实时的移动信息
+    NotifyGroup group=new NotifyGroup();//实时的移动信息组
 
     RealTimeClickListener listener;
 
     //UI
     TextView alert;
-    View notMove;
-    View move;
     RecyclerView recyclerView;
-    TextView from;
-    TextView time;
-    TextView to;
-    TextView last;
-    TextView distance;
-
-    String fromText;
-    String timeText;
-    String toText;
-    String lastText;
-    double distanceText;
-
-
-    final String OLD_MOVING_URL="";
-    final String STORE_OLD_MOVING_URL="";
+    int lastVisibleItem=0;
+    LinearLayoutManager linearLayoutManager;
 
     NotificationRecyclerViewAdapter.ItemClickListener itemClickListener;
     NotificationGroupRecycleAdapter adapter;
 
     //当前车辆是否处于位移状态
     boolean isMoving =false;
+    boolean ifHasNewOldData=false;//是否需要更新旧数据
 
     public TrackFragment(NotificationRecyclerViewAdapter.ItemClickListener itemClickListener,Handler handler)
     {
@@ -105,11 +97,11 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
     @Override
     public void onViewCreated(@NonNull View view,@Nullable Bundle savedBundle)
     {
-        data=new ArrayList<>();
+        if(data.size()==0)
+        {
+            getOldMsgAndParse();
+        }
         initUI(view);
-        test();
-        updateMovingMsg();
-        getOldMsgAndUpdate();
     }
 
     void initUI(View view)
@@ -117,49 +109,57 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
         recyclerView=view.findViewById(R.id.notifications);
         alert=view.findViewById(R.id.alert);
-        notMove=view.findViewById(R.id.not_move);
-        move=view.findViewById(R.id.move);
-        from=move.findViewById(R.id.from);
-        time=move.findViewById(R.id.time);
-        to=move.findViewById(R.id.to);
-        last=move.findViewById(R.id.last);
-        distance =move.findViewById(R.id.distance);
+        linearLayoutManager=new LinearLayoutManager(getContext());
+        recyclerView.setLayoutManager(linearLayoutManager);
+        adapter=new NotificationGroupRecycleAdapter(data,itemClickListener,getContext());
+        recyclerView.setAdapter(adapter);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if(newState==RecyclerView.SCROLL_STATE_IDLE)//滑动停止
+                {
+                    if(lastVisibleItem+1==adapter.getItemCount())//如果滑动停止的时候到底，即可以看到最后一个元素的时候
+                    {
+                        adapter.setIfLoading(1);
+                        adapter.updateState();//此处是为了显示正在加载
+
+                        getOldMsgAndParse();
+
+                        if(ifHasNewOldData)//如果查到了新的数据就更新
+                        {
+                            adapter.setData(data);
+                            adapter.setIfLoading(0);
+                            ifHasNewOldData=false;
+                        }
+                        else//如果没有查到就显示没有更多数据
+                        {
+                            adapter.setIfLoading(2);
+                        }
+                        adapter.updateState();
+                    }
+                }
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                // 在滑动完成后，拿到最后一个可见的item的位置
+                lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+            }
+        });
         updateUpperUI();
     }
 
     void updateUpperUI()
     {
-        if(move==null)
-        {
-            return;
-        }
         if(MainActivity.realAlertOn)
         {
             alert.setText("位置移动提醒已开启");
-            if(isMoving)//正在移动时，应该显示移动信息
-            {
-                notMove.setVisibility(View.INVISIBLE);
-                move.setVisibility(View.VISIBLE);
-                recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),250),0,0);
-                from.setText("移动起始位置:"+fromText);
-                time.setText("移动起始时间:"+timeText);
-                to.setText("当前车辆位置:"+toText);
-                last.setText("移动累计持续时间:"+lastText);
-                distance.setText("移动累计总距离:"+distanceText);
-            }
-            else//没有移动时，显示没有移动
-            {
-                notMove.setVisibility(View.VISIBLE);
-                move.setVisibility(View.INVISIBLE);
-                recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),120),0,0);
-            }
         }
         else
         {
             alert.setText("位置移动提醒未开启");
-            notMove.setVisibility(View.INVISIBLE);
-            move.setVisibility(View.INVISIBLE);
-            recyclerView.setPadding(PxUtils.dp2px(getContext(),5),PxUtils.dp2px(getContext(),50),0,0);
         }
     }
 
@@ -175,9 +175,6 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             {
                 //置标志位为真
                 isMoving =true;
-
-                //更新栏目
-                updateUpperUI();
 
                 //填入初始数据
                 GetAddress getAddress=new GetAddress(movingDto.fromLatitude,movingDto.fromLongitude);
@@ -196,13 +193,15 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
                 notify.last="00:00:00";
                 notify.distance=0.0;
                 points.add(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude));
-                fromText=getAddress.getAddress();
-                timeText=DateUtils.toHourAndMinute(movingDto.beginTime);
-                toText=getAddress.getAddress();
-                lastText="00:00:00";
-                distanceText=0.0;
 
-                updateUpperUI();
+                //更新UI，展示实时移动信息
+
+                group.date="正在发生的位移";
+                List<Notify> notifies=new ArrayList<>();
+                notifies.add(notify);
+                data.add(0,group);
+                adapter.setData(data);
+                adapter.updateState();
 
                 //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
                 if(MainActivity.realPointOn)
@@ -211,6 +210,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
                     msg.what=3;
                     handler.sendMessage(msg);
                 }
+
 
                 //发出通知，说明车辆位置发生了移动
                 Message msg=new Message();
@@ -231,14 +231,15 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
 
                 //保存数据
                 points.add(new LatLng(movingDto.toLatitude,movingDto.toLongitude));
-                toText=getAddress.getAddress();
-                lastText=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
-                distanceText=movingDto.distance;
                 notify.to=getAddress.getAddress();
                 notify.last=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
                 notify.distance=movingDto.distance;
 
-                updateUpperUI();
+                //更新UI
+                data.get(0).notifications.remove(0);
+                data.get(0).notifications.add(notify);
+                adapter.setData(data);
+                adapter.updateState();
 
                 //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
                 if(MainActivity.realPointOn)
@@ -248,151 +249,118 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
                     handler.sendMessage(msg);
                 }
             }
-            else if(isMoving)//车辆的此次移动已经停止
+            else if(isMoving)//如果此前还处于移动状态，但是这次已经显示没有移动了，则从此时开始车辆的此次移动已经停止
             {
                 //清空数据避免影响到下一次
                 isMoving =false;
                 points.clear();
+
+                //更新UI
+                data.remove(0);
+                adapter.setData(data);
+                adapter.updateState();
+
                 addToLocal(movingDto);
-                updateMovingMsg();
-                updateUpperUI();
             }
         }
        catch(Exception ex)
-       {
-           return;
-       }
+       {}
 
     }
 
     //子线程请求之前保存的移动数据
-    void getOldMsgAndUpdate()
+    void getOldMsgAndParse()
     {
-        new Thread(){
-            @Override
-            public void run()
-            {
-                try {
-                    URL url = new URL(OLD_MOVING_URL);
-                    HttpURLConnection httpURLConnection=(HttpURLConnection) url.openConnection();
-                    httpURLConnection.setRequestMethod("GET");
-                    InputStream in=httpURLConnection.getInputStream();
-                    BufferedReader reader=new BufferedReader(new InputStreamReader(in));
-                    StringBuilder builder=new StringBuilder();
-                    String oneLine;
-                    while((oneLine=reader.readLine())!=null)
-                    {
-                        builder.append(oneLine);
-                    }
-                    getData(builder.toString());
-                    updateMovingMsg();
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-    }
-
-    //子线程发post请求保存一条结束的移动信息
-    void postOldMsg(Long id,double distance)
-    {
-        new Thread() {
-            @Override
-            public void run() {
-                try{
-                    URL url = new URL(STORE_OLD_MOVING_URL);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("POST");
-                    conn.setDoOutput(true);
-                    conn.setRequestProperty("Connection", "Keep-Alive");
-                    conn.setRequestProperty("Charset", "UTF-8");
-                    // 设置文件类型:
-                    conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                    String json="{"+"\"id\":"+id+","+"\"distance\":"+distance+"}";
-                    // 往服务器里面发送数据
-                    byte[] data = json.getBytes(StandardCharsets.UTF_8);
-                    OutputStream os = conn.getOutputStream();
-                    os.write(data, 0, data.length);
-                    int tmp=conn.getResponseCode();
-                    os.close();
-                }
-                catch(ProtocolException e) {
-                    e.printStackTrace();
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
+        OldMoveMsgGet get=new OldMoveMsgGet(page);
+        Thread getOldMoveData=new Thread(get);
+        getOldMoveData.start();
+        try {
+            getOldMoveData.join();
+            parseOldData(get.getJson());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * 将获得的json格式的字符串转为list的数据格式
      */
-    void getData(String rowData)
+    void parseOldData(String rowData)
     {
-        List<Move> list=gson.fromJson(rowData,new TypeToken<List<Move>>(){}.getType());
-        List<Thread> threadsFrom=new ArrayList<>();
-        List<Thread> threadsTo=new ArrayList<>();
-        List<GetAddress> getsFrom=new ArrayList<>();
-        List<GetAddress> getsTo=new ArrayList<>();
-        for(Move move:list)
-        {
-            //将出发位置的经纬度转换成实际位置
-            GetAddress getFrom=new GetAddress(move.fromLatitude,move.fromLongitude);
-            Thread threadFrom=new Thread(getFrom);
-            threadFrom.start();
-            threadsFrom.add(threadFrom);
-            getsFrom.add(getFrom);
-
-            //将结束位置的经纬度转换成实际坐标
-            GetAddress getTo=new GetAddress(move.toLatitude,move.toLongitude);
-            Thread threadTo=new Thread(getTo);
-            threadTo.start();
-            threadsTo.add(threadTo);
-            getsTo.add(getTo);
-        }
-        for(int i=0;i<list.size();i++) {
-            String date = DateUtils.toYearAndMonthAndDate(list.get(i).beginTime);
-            Notify notification = new Notify();
-            notification.time = DateUtils.toHourAndMinute(list.get(i).beginTime) + "-" + DateUtils.toHourAndMinute(list.get(i).endTime);
-            try {
-                threadsFrom.get(i).join();
-                notification.from = getsFrom.get(i).getAddress();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        try {
+            JSONObject jsonObject=new JSONObject(rowData);
+            int totalPage=jsonObject.optInt("totalPages");
+            if(totalPage==0||totalPage<=page)
+            {
+                return;
             }
+            JSONArray array=jsonObject.getJSONArray("content");
+            String json=array.toString();
+            List<Move> list=dbGson.fromJson(json,new TypeToken<List<Move>>(){}.getType());
+            List<Thread> threadsFrom=new ArrayList<>();
+            List<Thread> threadsTo=new ArrayList<>();
+            List<GetAddress> getsFrom=new ArrayList<>();
+            List<GetAddress> getsTo=new ArrayList<>();
+            for(Move move:list)
+            {
+                //将出发位置的经纬度转换成实际位置
+                GetAddress getFrom=new GetAddress(move.fromLatitude,move.fromLongitude);
+                Thread threadFrom=new Thread(getFrom);
+                threadFrom.start();
+                threadsFrom.add(threadFrom);
+                getsFrom.add(getFrom);
 
-
-            try {
-                threadsTo.get(i).join();
-                notification.to = getsTo.get(i).getAddress();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                //将结束位置的经纬度转换成实际坐标
+                GetAddress getTo=new GetAddress(move.toLatitude,move.toLongitude);
+                Thread threadTo=new Thread(getTo);
+                threadTo.start();
+                threadsTo.add(threadTo);
+                getsTo.add(getTo);
             }
+            for(int i=0;i<list.size();i++) {
+                String date = DateUtils.toYearAndMonthAndDate(list.get(i).beginTime);
+                Notify notification = new Notify();
+                notification.time = DateUtils.toHourAndMinute(list.get(i).beginTime) + "-" + DateUtils.toHourAndMinute(list.get(i).endTime);
+                try {
+                    threadsFrom.get(i).join();
+                    notification.from = getsFrom.get(i).getAddress();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
-            notification.distance = list.get(i).distance;
-            notification.id = list.get(i).id;
-            notification.last = DateUtils.convertMillis((list.get(i).beginTime.getTime() - list.get(i).endTime.getTime()) / 1000);
-            if (data.size() != 0 && data.get(data.size() - 1).date.equals(date)) {
-                data.get(data.size() - 1).notifications.add(notification);
-            } else {
-                NotifyGroup group = new NotifyGroup();
-                group.date = date;
-                List<Notify> li = new ArrayList<>();
-                li.add(notification);
-                group.notifications = li;
-                data.add(group);
+
+                try {
+                    threadsTo.get(i).join();
+                    notification.to = getsTo.get(i).getAddress();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                notification.distance = list.get(i).distance;
+                notification.id = list.get(i).id;
+                notification.last = DateUtils.convertMillis((list.get(i).beginTime.getTime() - list.get(i).endTime.getTime()) / 1000);
+                if (data.size() != 0 && data.get(data.size() - 1).date.equals(date)) {
+                    data.get(data.size() - 1).notifications.add(notification);
+                } else {
+                    NotifyGroup group = new NotifyGroup();
+                    group.date = date;
+                    List<Notify> li = new ArrayList<>();
+                    li.add(notification);
+                    group.notifications = li;
+                    data.add(group);
+                }
             }
+            ifHasNewOldData=true;//上面的一串更新完毕，那么会出现新的数据，需要进行更新
+            page++;
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
 
     void addToLocal(MovingDto move)
     {
+        notify.id=move.id;
         //如果此时，列表中已经有日期并且和当天日期一样，那么插入，并且因为是最近的一条数据所以要插入在最前端
         if(data.size()!=0&&data.get(0).date.equals(DateUtils.toYearAndMonthAndDate(move.beginTime)))
         {
@@ -421,37 +389,8 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
         {
             data.get(data.size()-1).notifications.remove(data.get(data.size()-1).notifications.size()-1);
         }
-        updateMovingMsg();
-    }
-
-    //获取list格式的数据后更新
-    void updateMovingMsg()
-    {
-        LinearLayoutManager linearLayoutManager=new LinearLayoutManager(getContext());
-        adapter=new NotificationGroupRecycleAdapter(data,itemClickListener,getContext());
-        recyclerView.setLayoutManager(linearLayoutManager);
-        recyclerView.setAdapter(adapter);
-    }
-
-    void test() {
-        data = new ArrayList<>();
-        Notify notification1 = new Notify(1L,"最近的时间", "武汉大学", "华中科技大学", 1200, "00:12:34");
-
-        Notify notification2 = new Notify(2L,"倒数第二近的时间", "街道口", "广埠屯", 66, "00:10:24");
-
-        NotifyGroup notificationGroup = new NotifyGroup();
-        notificationGroup.notifications.add(notification1);
-        notificationGroup.notifications.add(notification2);
-        notificationGroup.date = "最近的一天";
-
-        data.add(notificationGroup);
-
-        NotifyGroup notificationGroup1 = new NotifyGroup();
-        notificationGroup1.notifications.add(notification1);
-        notificationGroup1.notifications.add(notification2);
-        notificationGroup1.date = "倒数第二近的一天";
-
-        data.add(notificationGroup1);
+        adapter.setData(data);
+        adapter.updateState();
     }
 
     //当实时移动信息被点击后执行
@@ -462,6 +401,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener{
             listener.onRealTimeClick();
         }
     }
+
 
     public interface RealTimeClickListener
     {

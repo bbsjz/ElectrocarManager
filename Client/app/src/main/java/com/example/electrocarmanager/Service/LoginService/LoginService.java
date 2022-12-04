@@ -1,5 +1,7 @@
 package com.example.electrocarmanager.Service.LoginService;
 
+import com.example.electrocarmanager.NetWork.LoginPost;
+
 public class LoginService {
 
     static String token;
@@ -16,7 +18,7 @@ public class LoginService {
         login.join();
         if(post.getCode()==200)
         {
-            token=post.result;
+            token=post.getInfo();
             return true;
         }
         else
