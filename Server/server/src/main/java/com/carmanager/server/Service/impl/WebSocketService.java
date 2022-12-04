@@ -61,9 +61,11 @@ public class WebSocketService implements IWebSocketService {
             dto.setFromLatitude(startPoint.getLatitude());
             dto.setFromLongitude(startPoint.getLongitude());
             dto.setDistance(moveUtils.getDistance());
-            // 在一段移动记录中，假如出现一个人在某一个时刻开启了移动提醒，则整段记录都应该可见
-            dto.setVisibility(moveUtils.isNeedToRecord());
-            dto.setId(moveService.saveMove(dto).getId()); // 保存并获得Move的Id
+            if(moveUtils.getStopAndNeedToStore())
+            {
+                dto.setId(moveService.saveMove(dto).getId()); // 保存并获得Move的Id
+                moveUtils.setStopAndShouldBeStore(false);
+            }
             String moveMessage = new Gson().toJson(dto);
             TextWebSocketFrame openFrame = new TextWebSocketFrame(moveMessage);
             ChannelSupervise.send2OpenLocationRemoveAlert(openFrame);

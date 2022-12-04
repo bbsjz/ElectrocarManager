@@ -1,6 +1,4 @@
-package com.example.electrocarmanager.Service.LoginService;
-
-import com.example.electrocarmanager.R;
+package com.example.electrocarmanager.NetWork;
 
 import java.io.BufferedReader;
 import java.io.IOException;

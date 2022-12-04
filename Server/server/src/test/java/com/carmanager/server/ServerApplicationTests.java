@@ -21,13 +21,8 @@ class ServerApplicationTests {
         @Test
         void gsonTest()
         {
-                String pass = "admin";
-
-                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-                final String passHash = encoder.encode(pass);
-                System.out.println(passHash);
-
-                final boolean matches = encoder.matches(pass, passHash);
-                System.out.println(matches);
+                long time=1670093623000l;
+                Date date=new Date(time);
+                System.out.println(date);
         }
 }

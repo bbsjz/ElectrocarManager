@@ -44,8 +44,6 @@ public class Move {
     @ApiModelProperty("总移动距离")
     Double distance;
 
-    @ApiModelProperty("本条移动是否对用户可见")
-    Boolean visibility;
 
     public Move(Move oldMove) {
         this.id = oldMove.getId();
@@ -56,7 +54,6 @@ public class Move {
         this.toLatitude = oldMove.getToLatitude();
         this.toLongitude = oldMove.getToLongitude();
         this.distance = oldMove.getDistance();
-        this.visibility = oldMove.getVisibility();
     }
 
 }
