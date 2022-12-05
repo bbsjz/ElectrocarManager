@@ -1,6 +1,5 @@
 package com.carmanager.server;
 
-import com.sun.corba.se.spi.ior.TaggedProfileTemplate;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
