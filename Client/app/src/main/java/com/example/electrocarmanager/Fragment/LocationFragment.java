@@ -77,6 +77,8 @@ public class LocationFragment extends Fragment {
     ImageView navigation;
     ImageView round;
     ImageView moveNotification;
+    ImageView roundConnect;
+    ImageView connect;
     List<Overlay> overlays=new ArrayList<>();
 
 
@@ -130,6 +132,8 @@ public class LocationFragment extends Fragment {
         baiduMap=mapView.getMap();
         round=view.findViewById(R.id.round);
         navigation=view.findViewById(R.id.navigation);
+        roundConnect=view.findViewById(R.id.round_connect);
+        connect=view.findViewById(R.id.connect);
         moveNotification=view.findViewById(R.id.move_notification);
         round.setOnClickListener(v->{
             updateNotificationUI();
@@ -143,6 +147,21 @@ public class LocationFragment extends Fragment {
         {
             round.setImageResource(R.drawable.round);
             moveNotification.setImageResource(R.drawable.move_notification);
+        }
+        if(MainActivity.ifConnected)
+        {
+            roundConnect.setVisibility(View.INVISIBLE);
+            connect.setVisibility(View.INVISIBLE);
+        }
+        else
+        {
+            roundConnect.setVisibility(View.VISIBLE);
+            connect.setVisibility(View.VISIBLE);
+            roundConnect.setOnClickListener(v->{
+                Message msg=new Message();
+                msg.what=8;
+                handler.sendMessage(msg);
+            });
         }
 
         navigation.setOnClickListener(v-> {
