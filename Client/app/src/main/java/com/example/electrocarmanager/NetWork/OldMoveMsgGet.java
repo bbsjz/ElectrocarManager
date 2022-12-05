@@ -10,7 +10,7 @@ import java.net.URL;
 
 public class OldMoveMsgGet implements Runnable{
 
-    final String OLD_MOVING_URL="http://192.168.43.120:8080/move";
+    final String OLD_MOVING_URL="http://jp.safengine.xyz:8080/move";
     int page;
     String json;
 

@@ -79,6 +79,8 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
     //当前车辆是否处于位移状态
     boolean isMoving =false;
     boolean ifHasNewOldData=false;//是否需要更新旧数据
+    final String moving="正在发生的位移";
+    final String notMoving="当前没有正在发生的位移";
 
     public TrackFragment(NotificationRecyclerViewAdapter.ItemClickListener itemClickListener,Handler handler)
     {
@@ -153,13 +155,45 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
 
     void updateUpperUI()
     {
+        if(adapter==null)
+        {
+            return;
+        }
         if(MainActivity.realAlertOn)
         {
             alert.setText("位置移动提醒已开启");
+            //如果打开了位移提醒并且显示已经在移动，那么此前必然已经添加了数据，此时只需要更新数据即可
+            if(isMoving&&!data.get(0).equals(moving)&&!data.get(0).equals(notMoving))
+            {
+                data.add(0,group);
+                adapter.setData(data);
+                adapter.updateState();
+            }
+            else if(isMoving)
+            {
+                adapter.setData(data);
+                adapter.updateState();
+            }
+            //如果没有处于移动状态，并且data没有实时信息那一栏，需要手动添加
+            else if(!data.get(0).date.equals(notMoving))
+            {
+                group.date=notMoving;
+                List<Notify> notifies=new ArrayList<>();
+                group.notifications=notifies;
+                data.add(0,group);
+                adapter.setData(data);
+                adapter.updateState();
+            }
         }
         else
         {
             alert.setText("位置移动提醒未开启");
+            if(data.get(0).date.equals(notMoving)||data.get(0).date.equals(moving))
+            {
+                data.remove(0);
+                adapter.setData(data);
+                adapter.updateState();
+            }
         }
     }
 
@@ -194,14 +228,26 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                 notify.distance=0.0;
                 points.add(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude));
 
-                //更新UI，展示实时移动信息
-
-                group.date="正在发生的位移";
+                group.date=moving;
                 List<Notify> notifies=new ArrayList<>();
                 notifies.add(notify);
-                data.add(0,group);
-                adapter.setData(data);
-                adapter.updateState();
+                group.notifications=notifies;
+
+                //更新UI，展示实时移动信息
+
+                if(data.get(0).date.equals(notMoving))
+                {
+                    data.get(0).date=moving;
+                    List<Notify> notifiesList=new ArrayList<>();
+                    notifies.add(notify);
+                    data.get(0).notifications=notifiesList;
+                }
+                else
+                {
+                    data.add(0,group);
+                }
+
+                updateUpperUI();
 
                 //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
                 if(MainActivity.realPointOn)
@@ -210,7 +256,6 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                     msg.what=3;
                     handler.sendMessage(msg);
                 }
-
 
                 //发出通知，说明车辆位置发生了移动
                 Message msg=new Message();
@@ -234,12 +279,22 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                 notify.to=getAddress.getAddress();
                 notify.last=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
                 notify.distance=movingDto.distance;
+                group.notifications.remove(0);
+                group.notifications.add(notify);
+
+                if(!data.get(0).date.equals(moving))//第一条不是正在发生的移动就说明被删了
+                {
+
+                    data.add(group);
+                }
+                else
+                {
+                    data.get(0).notifications.remove(0);
+                    data.get(0).notifications.add(notify);
+                }
 
                 //更新UI
-                data.get(0).notifications.remove(0);
-                data.get(0).notifications.add(notify);
-                adapter.setData(data);
-                adapter.updateState();
+                updateUpperUI();
 
                 //只有在点开实时移动轨迹图的时候才通知主程序更新UI，否则只在后台存储数据
                 if(MainActivity.realPointOn)
@@ -255,10 +310,21 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                 isMoving =false;
                 points.clear();
 
+                group.date=notMoving;
+                group.notifications=new ArrayList<>();
+
+                if(!data.get(0).date.equals(moving))//第一条不是正在发生的移动就说明被删了
+                {
+                    data.add(group);
+                }
+                else
+                {
+                    data.get(0).date=notMoving;
+                    data.get(0).notifications=new ArrayList<>();
+                }
+
                 //更新UI
-                data.remove(0);
-                adapter.setData(data);
-                adapter.updateState();
+                updateUpperUI();
 
                 addToLocal(movingDto);
             }
