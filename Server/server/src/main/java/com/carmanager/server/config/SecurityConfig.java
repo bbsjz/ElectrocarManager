@@ -44,13 +44,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception
     {
         httpSecurity.csrf().disable();
-//        httpSecurity.authorizeRequests()
-//                .antMatchers("/authentication/login").permitAll()
-//                .anyRequest().authenticated()
-//                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        //有验证的
         httpSecurity.authorizeRequests()
-                .anyRequest().permitAll()
+                .antMatchers("/authentication/login").permitAll()
+                .anyRequest().authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        //没有验证的
+//        httpSecurity.authorizeRequests()
+//                .anyRequest().permitAll()
+//                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }

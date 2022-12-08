@@ -1,5 +1,8 @@
 package com.example.electrocarmanager.NetWork;
 
+import com.example.electrocarmanager.Fragment.PointFragment;
+import com.example.electrocarmanager.MainActivity;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,23 +11,24 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class OldMoveMsgGet implements Runnable{
+public class PointPost implements Runnable{
 
-    final String OLD_MOVING_URL="https://jp.safengine.xyz/move";
-    int page;
-    String json;
+    final String OLD_TRACK_POINT ="https://jp.safengine.xyz/point";
+    Long id;
+    String result;
 
-    public OldMoveMsgGet(int page)
+    public PointPost(Long id)
     {
-        this.page=page;
+        this.id=id;
     }
 
     @Override
     public void run() {
         try {
-            URL url = new URL(OLD_MOVING_URL+"?pageNum="+page);
+            URL url = new URL(OLD_TRACK_POINT+"/"+id);
             HttpURLConnection httpURLConnection=(HttpURLConnection) url.openConnection();
             httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestProperty("Authorization","Bearer  "+ MainActivity.token);
             InputStream in=httpURLConnection.getInputStream();
             BufferedReader reader=new BufferedReader(new InputStreamReader(in));
             StringBuilder builder=new StringBuilder();
@@ -33,7 +37,7 @@ public class OldMoveMsgGet implements Runnable{
             {
                 builder.append(oneLine);
             }
-            json=builder.toString();
+            result=builder.toString();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -41,8 +45,8 @@ public class OldMoveMsgGet implements Runnable{
         }
     }
 
-    public String getJson()
+    public String getResult()
     {
-        return json;
+        return result;
     }
 }

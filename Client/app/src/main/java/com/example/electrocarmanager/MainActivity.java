@@ -236,6 +236,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                             timer.cancel();
                         }
                         delayTime=1000;
+                        locationFragment.updateConnectUI();
                         break;
                     }
                     case 7://7表示WS连接失败，则重新连接一次，连接按照时长进行
@@ -243,11 +244,20 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                         Toast.makeText(getApplicationContext(),(String)msg.obj,Toast.LENGTH_LONG).show();
                         ifConnected=false;
                         reConnect();
+                        locationFragment.updateConnectUI();
                         break;
                     }
                     case 8://8表示主动发起重连，立刻重连
                     {
                         websocketClient.connect();
+                    }
+                    case 9://9表示曾经连接成功过，但是现在连接断开了
+                    {
+                        Toast.makeText(getApplicationContext(),"客户端与服务端断开连接",Toast.LENGTH_LONG).show();
+                        ifConnected=false;
+                        reConnect();
+                        locationFragment.updateConnectUI();
+                        break;
                     }
                 }
             }
