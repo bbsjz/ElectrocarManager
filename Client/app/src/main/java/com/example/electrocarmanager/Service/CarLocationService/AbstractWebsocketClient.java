@@ -42,27 +42,6 @@ public abstract class AbstractWebsocketClient implements Closeable {
         throw new MyException ("连接已经关闭");
     }
 
-    /**
-     * @return:
-     */
-    public void connect() throws MyException {
-        new Thread()
-        {
-            @Override
-            public void run()
-            {
-                try {
-                    doOpen();
-                    doConnect();
-                } catch (Exception e) {
-//                    throw new MyException ("连接没有成功打开,原因是:{" + e.getMessage()+"}", e);
-                    int tmp=0;
-                }
-            }
-        }.start();
-
-    }
-
 
     /**
      * @param countDownLatch  计数器
@@ -99,6 +78,11 @@ public abstract class AbstractWebsocketClient implements Closeable {
      * @return: {@link Channel}
      */
     protected abstract Channel getChannel();
+
+    /**
+     * 进行连接
+     */
+    protected abstract void connect();
 
     /**
      * 关闭连接

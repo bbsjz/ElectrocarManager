@@ -1,5 +1,6 @@
 package com.example.electrocarmanager;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -54,6 +55,8 @@ public class LoginActivity extends AppCompatActivity {
                     intent.putExtra("token",LoginService.getToken());
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
+                    ((Activity)LoginActivity.this).overridePendingTransition(R.anim.in,
+                            R.anim.out);
                 }
                 else
                 {

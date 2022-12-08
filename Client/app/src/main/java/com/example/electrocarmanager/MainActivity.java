@@ -45,6 +45,8 @@ import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapte
 
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends FragmentActivity implements NotificationRecyclerViewAdapter.ItemClickListener,
         PointFragment.ArrowClickListener, RealTimePointFragment.RealArrowClickListener,TrackFragment.RealTimeClickListener{
@@ -76,9 +78,12 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     MyLocationService myLocationService;
     MyLocationListener myLocationListener;
     WebsocketClient websocketClient;
+    Timer timer;//用于执行重连服务的定时器
+    int delayTime=1000;//经过多少时间重新连接WS，初始值为1秒钟，自动重连失败则累加
 
 
     public static Handler handler;
+    public static boolean ifConnected;//是否已经连接
     public static String token;//token，全局共享
     public static boolean realPointOn=false;//是否正处在实时轨迹界面
     public static boolean realAlertOn=false;//当前是否开启实时位移提醒
@@ -127,13 +132,6 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
 
     void init()
     {
-        
-        //设置状态栏为透明
-//        if (Build.VERSION.SDK_INT >= 21) {
-//            View decorView = getWindow().getDecorView();
-//            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN );
-//            getWindow().setStatusBarColor(Color.TRANSPARENT);
-//        }
         if(!checkPermission())
         {
             return;
@@ -232,6 +230,34 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                     case 6://6表示WS连接成功
                     {
                         Toast.makeText(getApplicationContext(),"客户端服务端已连接",Toast.LENGTH_LONG).show();
+                        ifConnected=true;
+                        if(timer!=null)
+                        {
+                            timer.cancel();
+                        }
+                        delayTime=1000;
+                        locationFragment.updateConnectUI();
+                        break;
+                    }
+                    case 7://7表示WS连接失败，则重新连接一次，连接按照时长进行
+                    {
+                        Toast.makeText(getApplicationContext(),(String)msg.obj,Toast.LENGTH_LONG).show();
+                        ifConnected=false;
+                        reConnect();
+                        locationFragment.updateConnectUI();
+                        break;
+                    }
+                    case 8://8表示主动发起重连，立刻重连
+                    {
+                        websocketClient.connect();
+                    }
+                    case 9://9表示曾经连接成功过，但是现在连接断开了
+                    {
+                        Toast.makeText(getApplicationContext(),"客户端与服务端断开连接",Toast.LENGTH_LONG).show();
+                        ifConnected=false;
+                        reConnect();
+                        locationFragment.updateConnectUI();
+                        break;
                     }
                 }
             }
@@ -302,6 +328,13 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
         track.setOnClickListener(view->{
             fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
         });
+    }
+
+    void reConnect()
+    {
+        timer=new Timer();
+        timer.schedule(new Task(),delayTime);
+        delayTime*=2;
     }
 
     //关闭程序
@@ -402,6 +435,14 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
         fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
         tabs.setVisibility(View.VISIBLE);
         point.setVisibility(View.INVISIBLE);
+    }
+
+    public class Task extends TimerTask {
+
+        @Override
+        public void run() {
+            websocketClient.connect();
+        }
     }
 
 }

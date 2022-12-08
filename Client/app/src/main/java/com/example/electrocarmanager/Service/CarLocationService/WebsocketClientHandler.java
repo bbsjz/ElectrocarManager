@@ -3,6 +3,8 @@ package com.example.electrocarmanager.Service.CarLocationService;
 import android.os.Handler;
 import android.os.Message;
 
+import com.example.electrocarmanager.MainActivity;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +87,9 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         log.info("连接断开");
+        Message msg=new Message();
+        msg.what=9;
+        handler.sendMessage(msg);
     }
 
     /**

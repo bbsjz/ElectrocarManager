@@ -1,6 +1,7 @@
 package com.example.electrocarmanager.Service.CarLocationService;
 
 import android.os.Handler;
+import android.os.Message;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,27 @@ public class WebsocketClient extends AbstractWebsocketClient {
         if (channel != null) {
             channel.close();
         }
+    }
+
+    @Override
+    public void connect()  {
+        new Thread()
+        {
+            @Override
+            public void run()
+            {
+                try {
+                    doOpen();
+                    doConnect();
+                } catch (Exception e) {
+                    Message msg=new Message();
+                    msg.what=7;
+                    msg.obj="与服务器连接失败,原因是:{" + e.getMessage()+"}";
+                    msgHandler.sendMessage(msg);
+                }
+            }
+        }.start();
+
     }
 
     public boolean isOpen() {
