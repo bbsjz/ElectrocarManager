@@ -427,4 +427,27 @@ public class LocationFragment extends Fragment {
         }
         handler.sendMessage(msg);
     }
+
+    public void updateConnectUI()
+    {
+        if(roundConnect==null)
+        {
+            return;
+        }
+        if(MainActivity.ifConnected)
+        {
+            roundConnect.setVisibility(View.INVISIBLE);
+            connect.setVisibility(View.INVISIBLE);
+        }
+        else
+        {
+            roundConnect.setVisibility(View.VISIBLE);
+            connect.setVisibility(View.VISIBLE);
+            roundConnect.setOnClickListener(v->{
+                Message msg=new Message();
+                msg.what=8;
+                handler.sendMessage(msg);
+            });
+        }
+    }
 }

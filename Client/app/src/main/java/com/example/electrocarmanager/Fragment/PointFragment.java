@@ -21,8 +21,11 @@ import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.example.electrocarmanager.Entity.Point;
+import com.example.electrocarmanager.NetWork.PointPost;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.DataBaseDateAdapter;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
@@ -33,6 +36,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -40,7 +44,6 @@ import java.util.List;
  */
 public class PointFragment extends Fragment implements View.OnClickListener{
 
-    final String OLD_TRACK_POINT ="";
     Long id;
 
     List<LatLng> data=new ArrayList<>();
@@ -71,8 +74,7 @@ public class PointFragment extends Fragment implements View.OnClickListener{
         mapView=view.findViewById(R.id.map);
         baiduMap=mapView.getMap();
         arrow.setOnClickListener(this);
-        test();
-        updateMap();
+        getOldTrackPointAndUpdate();
     }
 
     @Override
@@ -100,34 +102,18 @@ public class PointFragment extends Fragment implements View.OnClickListener{
     /**
      * 子线程请求网络获取此次位移的轨迹，并更新在地图上
      */
-    void getOldTrackPointAndUpdate(Long id)
+    void getOldTrackPointAndUpdate()
     {
-        new Thread()
-        {
-            @Override
-            public void run()
-            {
-                try {
-                    URL url = new URL(OLD_TRACK_POINT+"?id="+id);
-                    HttpURLConnection httpURLConnection=(HttpURLConnection) url.openConnection();
-                    httpURLConnection.setRequestMethod("GET");
-                    InputStream in=httpURLConnection.getInputStream();
-                    BufferedReader reader=new BufferedReader(new InputStreamReader(in));
-                    StringBuilder builder=new StringBuilder();
-                    String oneLine;
-                    while((oneLine=reader.readLine())!=null)
-                    {
-                        builder.append(oneLine);
-                    }
-                    getData(builder.toString());
-                    updateMap();
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
+        PointPost post=new PointPost(id);
+        Thread thread=new Thread(post);
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        getData(post.getResult());
+        updateMap();
     }
 
     /**
@@ -136,8 +122,12 @@ public class PointFragment extends Fragment implements View.OnClickListener{
      */
     void getData(String rowData)
     {
-        Gson gson =new Gson();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Date.class, new DataBaseDateAdapter()).create();
         List<Point> points=gson.fromJson(rowData,new TypeToken<List<Point>>(){}.getType());
+        if(points==null)
+        {
+            return;
+        }
         for(Point point:points)
         {
             LatLng latLng=new LatLng(point.latitude,point.longitude);
@@ -162,6 +152,10 @@ public class PointFragment extends Fragment implements View.OnClickListener{
      */
     void updateMap()
     {
+        if(data.size()==0)
+        {
+            return;
+        }
         //设定中心点坐标
         LatLng cent = new LatLng(data.get(data.size()/2).latitude,data.get(data.size()/2).longitude);
         //定义地图状态

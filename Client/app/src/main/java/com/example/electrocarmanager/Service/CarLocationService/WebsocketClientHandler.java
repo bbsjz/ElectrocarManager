@@ -77,7 +77,6 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
         Message msg=new Message();
         msg.what=6;
         handler.sendMessage(msg);
-        MainActivity.ifConnected=true;
     }
 
     /**
@@ -88,7 +87,9 @@ public class WebsocketClientHandler extends SimpleChannelInboundHandler<Object> 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         log.info("连接断开");
-        MainActivity.ifConnected=false;
+        Message msg=new Message();
+        msg.what=9;
+        handler.sendMessage(msg);
     }
 
     /**

@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 
 public class LoginPost implements Runnable{
 
-    final String LOGIN_URL="http://jp.safengine.xyz:8080/authentication/login";
+    final String LOGIN_URL="https://jp.safengine.xyz/authentication/login";
     String userName;
     String pwd;
     String ex;
