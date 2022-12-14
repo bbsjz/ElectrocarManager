@@ -37,6 +37,9 @@ public class ChannelSupervise {
      */
     public static void removeChannel(Channel channel) {
         globalGroup.remove(channel);
+        if (alertGroup.find(channel.id()) != null) {
+            alertGroup.remove(channel);
+        }
     }
 
     /**

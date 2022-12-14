@@ -14,6 +14,8 @@ import java.util.Date;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @ApiModel("一条来自硬件发送的坐标消息")
 @Entity
 public class Point {

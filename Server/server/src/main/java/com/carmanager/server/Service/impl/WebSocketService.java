@@ -64,7 +64,7 @@ public class WebSocketService implements IWebSocketService {
             if(moveUtils.getStopAndNeedToStore())
             {
                 dto.setId(moveService.saveMove(dto).getId()); // 保存并获得Move的Id
-                moveUtils.setStopAndShouldBeStore(false);
+                moveUtils.clearStopAndShouldBeStore();
             }
             String moveMessage = new Gson().toJson(dto);
             TextWebSocketFrame openFrame = new TextWebSocketFrame(moveMessage);

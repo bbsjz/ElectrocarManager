@@ -1,12 +1,8 @@
 package com.carmanager.server.Utils;
 
-import com.carmanager.server.Entity.Move;
 import com.carmanager.server.Entity.Point;
-import com.carmanager.server.Service.impl.MoveService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 @Component
@@ -28,7 +24,7 @@ public class MoveUtils {
 
     private final int buffCapacity = 5; //缓冲区长度
 
-    final int movingThreshold = 3; // 明显移动的阈值
+    final int movingThreshold = 2; // 明显移动的阈值
 
     final int timeThreshold = 60 * 1000; // 最长不移动时间，以ms记
 
@@ -44,25 +40,26 @@ public class MoveUtils {
 
     /**
      * 判断两点之间是否发生明显移动
+     *
      * @param p1 前一个点
      * @param p2 后一个点
      * @return 是否明显移动
      */
     private boolean pointMoving(Point p1, Point p2) {
         // 各参数间的权重
-        double latitudeArg = 10;
-        double longitudeArg = 10;
-        double accXArg = 1;
-        double accYArg = 1;
-        double accZArg = 1;
-        double angularXArg = 1;
-        double angularYArg = 1;
-        double angularZArg = 1;
+        double latitudeArg = 800;
+        double longitudeArg = 800;
+        double accXArg = 5;
+        double accYArg = 5;
+        double accZArg = 5;
+        double angularXArg = 3;
+        double angularYArg = 3;
+        double angularZArg = 3;
         double latitudeDiff = Math.abs(p1.getLatitude() - p2.getLatitude()) * latitudeArg;
         double longitudeDiff = Math.abs(p1.getLongitude() - p2.getLongitude()) * longitudeArg;
-        double accDiffX = Math.abs(p2.getAccelerationX()) * accXArg;
-        double accDiffY = Math.abs(p2.getAccelerationY()) * accYArg;
-        double accDiffZ = Math.abs(p2.getAccelerationZ()) * accZArg;
+        double accDiffX = Math.abs(p1.getAccelerationX() - p2.getAccelerationX()) * accXArg;
+        double accDiffY = Math.abs(p1.getAccelerationY() - p2.getAccelerationY()) * accYArg;
+        double accDiffZ = Math.abs(p1.getAccelerationZ() - p2.getAccelerationZ()) * accZArg;
         double angularDiffX = Math.abs(p2.getAngularVelocityX()) * angularXArg;
         double angularDiffY = Math.abs(p2.getAngularVelocityY()) * angularYArg;
         double angularDiffZ = Math.abs(p2.getAngularVelocityZ()) * angularZArg;
@@ -74,6 +71,7 @@ public class MoveUtils {
 
     /**
      * 经过滤波后得出是否正在移动
+     *
      * @return 是否正在移动
      */
     public boolean isMoving() {
@@ -83,6 +81,7 @@ public class MoveUtils {
 
     /**
      * 得到开始移动的点
+     *
      * @return 开始移动的点
      */
     public Point getBeginMovingPoint() {
@@ -90,25 +89,26 @@ public class MoveUtils {
     }
 
     /**
-     * 设置是否需要保存的标志位
-     * @param b 是否需要保存
+     * 清除是否需要保存的标志位
      */
-    public void setStopAndShouldBeStore(boolean b)
-    {
-        stopAndShouldBeStore=b;
+    public void clearStopAndShouldBeStore() {
+        stopAndShouldBeStore = false;
+        moving = false;
+        beginMovingPoint = null;
     }
 
     /**
      * 返回是否需要保存本条记录
+     *
      * @return 是否需要保存本条记录
      */
-    public boolean getStopAndNeedToStore()
-    {
+    public boolean getStopAndNeedToStore() {
         return stopAndShouldBeStore;
     }
 
     /**
      * 获取移动总距离, 不在移动则返回0
+     *
      * @return 移动总距离
      */
     public double getDistance() {
@@ -118,6 +118,7 @@ public class MoveUtils {
     /**
      * 获取本记录是否应该可见
      * 没有移动默认为false
+     *
      * @return 可见
      */
     public boolean isNeedToRecord() {
@@ -128,6 +129,7 @@ public class MoveUtils {
      * 设置本记录是否应该可见
      * 在一段移动记录中假如出现一个人在某一个时刻开启了移动提醒
      * 则整段记录都应该可见
+     *
      * @param open 某时刻是否有人开启移动提醒
      */
     public void updateRecordStatus(boolean open) {
@@ -138,6 +140,7 @@ public class MoveUtils {
 
     /**
      * 添加新收到的点，更新移动状态，开启同步防止线程不安全操作
+     *
      * @param point 新收到的点
      */
     public synchronized void addPoint(Point point) {
@@ -148,6 +151,12 @@ public class MoveUtils {
             moving = false;
             distance = 0;
             return;
+        }
+
+        // 当GPS无信号时假设车辆经纬度不发生改变
+        if (point.getLatitude() == 0 && point.getLongitude() == 0) {
+            point.setLatitude(lastPoint.getLatitude());
+            point.setLatitude(lastPoint.getLongitude());
         }
 
         boolean nowMoving = pointMoving(lastPoint, point);
@@ -175,11 +184,8 @@ public class MoveUtils {
         } else if (moving && notMovingTime >= timeThreshold) {
             // 上一个时刻在移动状态 and 距离最后一次明显移动的时长超过阈值
             // 判断为结束移动
-            moving = false;
-            beginMovingPoint = null;
-            if(needToRecord)
-            {
-                stopAndShouldBeStore=true;
+            if (needToRecord) {
+                stopAndShouldBeStore = true;
             }
             needToRecord = false;
         }
