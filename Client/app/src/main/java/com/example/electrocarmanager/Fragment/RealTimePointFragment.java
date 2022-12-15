@@ -30,6 +30,7 @@ public class RealTimePointFragment extends Fragment implements View.OnClickListe
 
     MapView mapView;
     BaiduMap baiduMap;
+    boolean ifFirstOpen=true;
 
     public RealTimePointFragment(PointFragment.ArrowClickListener arrowClickListener)
     {
@@ -95,21 +96,31 @@ public class RealTimePointFragment extends Fragment implements View.OnClickListe
      */
     public void updateDataAndMap(List<LatLng> data)
     {
+        if(baiduMap==null)
+        {
+            return;
+        }
         this.data=data;
         //设定中心点坐标
         LatLng cent = new LatLng(data.get(data.size()/2).latitude,data.get(data.size()/2).longitude);
-        //定义地图状态
-        MapStatus mMapStatus = new MapStatus.Builder()
-                .target(cent)
-                .build();
-        //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
-        MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
-        //改变地图状态
-        baiduMap.setMapStatus(mMapStatusUpdate);
+        if(ifFirstOpen)
+        {
+            //定义地图状态
+            MapStatus mMapStatus = new MapStatus.Builder()
+                    .target(cent)
+                    .zoom(18)
+                    .build();
+            //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
+            MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
+            //改变地图状态
+            baiduMap.setMapStatus(mMapStatusUpdate);
+            ifFirstOpen=false;
+        }
+
         //设置折线的属性
         OverlayOptions mOverlayOptions = new PolylineOptions()
                 .width(10)
-                .color(0xAAFF0000)
+                .color(0xAA6495ED)
                 .points(data);
         //在地图上绘制折线
         //mPloyline 折线对象

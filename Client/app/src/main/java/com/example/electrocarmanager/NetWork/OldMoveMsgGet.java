@@ -1,5 +1,7 @@
 package com.example.electrocarmanager.NetWork;
 
+import com.example.electrocarmanager.MainActivity;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +27,7 @@ public class OldMoveMsgGet implements Runnable{
             URL url = new URL(OLD_MOVING_URL+"?pageNum="+page);
             HttpURLConnection httpURLConnection=(HttpURLConnection) url.openConnection();
             httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestProperty("Authorization","Bearer  "+ MainActivity.token);
             InputStream in=httpURLConnection.getInputStream();
             BufferedReader reader=new BufferedReader(new InputStreamReader(in));
             StringBuilder builder=new StringBuilder();

@@ -15,9 +15,9 @@ public class DateUtils {
         long minute = (duration % 3600) / 60;
         long second = (duration % 3600) % 60;
 
-        String hourStr = hour == 0 ? "00" : hour > 10 ? hour + "" : "0" + hour;
-        String minuteStr = minute == 0 ? "00" : minute > 10 ? minute + "" : "0" + minute;
-        String secondStr = second == 0 ? "00" : second > 10 ? second + "" : "0" + second;
+        String hourStr = hour == 0 ? "00" : hour >= 10 ? hour + "" : "0" + hour;
+        String minuteStr = minute == 0 ? "00" : minute >= 10 ? minute + "" : "0" + minute;
+        String secondStr = second == 0 ? "00" : second >= 10 ? second + "" : "0" + second;
 
         return hourStr + ":" + minuteStr + ":" + secondStr;
     }

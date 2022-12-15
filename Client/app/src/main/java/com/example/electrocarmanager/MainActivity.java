@@ -49,7 +49,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends FragmentActivity implements NotificationRecyclerViewAdapter.ItemClickListener,
-        PointFragment.ArrowClickListener, RealTimePointFragment.RealArrowClickListener,TrackFragment.RealTimeClickListener{
+        PointFragment.ArrowClickListener, RealTimePointFragment.RealArrowClickListener{
 
     //三个fragment
     SwitchFragment switchFragment;
@@ -229,7 +229,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                     }
                     case 6://6表示WS连接成功
                     {
-                        Toast.makeText(getApplicationContext(),"客户端服务端已连接",Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(),"客户端服务端已连接",Toast.LENGTH_SHORT).show();
                         ifConnected=true;
                         if(timer!=null)
                         {
@@ -237,6 +237,16 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                         }
                         delayTime=1000;
                         locationFragment.updateConnectUI();
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if(realAlertOn)//如果是断开重连，重连后如果之前是打开了位移提醒，那么重连后也要重新打开
+                        {
+                            websocketClient.sendMsg("OPEN_MOVING_ALERT");
+                            Toast.makeText(getApplicationContext(),"重新打开检测",Toast.LENGTH_LONG).show();
+                        }
                         break;
                     }
                     case 7://7表示WS连接失败，则重新连接一次，连接按照时长进行
@@ -250,6 +260,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
                     case 8://8表示主动发起重连，立刻重连
                     {
                         websocketClient.connect();
+                        break;
                     }
                     case 9://9表示曾经连接成功过，但是现在连接断开了
                     {
@@ -296,8 +307,8 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
         //实例化四个fragment，其中，默认一开始显示开锁页面
         switchFragment=new SwitchFragment(handler);
         locationFragment=new LocationFragment(handler);
-        trackFragment=new TrackFragment(this,handler);
-        realTimePointFragment=new RealTimePointFragment(this);
+        trackFragment=new TrackFragment(this::onItemClick,handler);
+        realTimePointFragment=new RealTimePointFragment(this::onRealArrowClick);
 
         fragmentManager.beginTransaction().add(R.id.fragment,switchFragment).commit();
     }
@@ -381,11 +392,21 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
     }
 
     @Override
-    public void onItemClick(Notify notification) {
-        PointFragment pointFragment=new PointFragment(this,notification.id);
-        fragmentManager.beginTransaction().replace(R.id.fragment,pointFragment).commit();
+    public void onItemClick(Notify notification,boolean ifReal) {
+        if(!ifReal)
+        {
+            PointFragment pointFragment=new PointFragment(this::onArrowClick,notification.id);
+            fragmentManager.beginTransaction().replace(R.id.fragment,pointFragment).commit();
+            updatePointDetail(notification);
+        }
+        else
+        {
+            realPointOn=true;
+            fragmentManager.beginTransaction().replace(R.id.fragment,realTimePointFragment).commit();
+            realTimePointFragment.updateDataAndMap(trackFragment.points);
 
-        updatePointDetail(notification);
+            updateRealPointDetail(trackFragment.points,trackFragment.notify);
+        }
 
         tabs.setVisibility(View.INVISIBLE);
         point.setVisibility(View.VISIBLE);
@@ -393,6 +414,14 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
 
     @Override
     public void onArrowClick() {
+        fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
+        tabs.setVisibility(View.VISIBLE);
+        point.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onRealArrowClick() {
+        realPointOn=false;
         fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
         tabs.setVisibility(View.VISIBLE);
         point.setVisibility(View.INVISIBLE);
@@ -407,18 +436,6 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
         distance.setText("移动距离:"+notification.distance);
     }
 
-    @Override
-    public void onRealTimeClick() {
-        realPointOn=true;
-        realTimePointFragment.updateDataAndMap(trackFragment.points);
-        fragmentManager.beginTransaction().replace(R.id.fragment,realTimePointFragment).commit();
-
-        updateRealPointDetail(trackFragment.points,trackFragment.notify);
-
-        tabs.setVisibility(View.INVISIBLE);
-        point.setVisibility(View.VISIBLE);
-    }
-
     void updateRealPointDetail(List<LatLng> data, Notify notification)
     {
         realTimePointFragment.updateDataAndMap(data);
@@ -429,16 +446,7 @@ public class MainActivity extends FragmentActivity implements NotificationRecycl
         distance.setText("移动累计总距离:"+notification.distance);
     }
 
-    @Override
-    public void onRealArrowClick() {
-        realPointOn=false;
-        fragmentManager.beginTransaction().replace(R.id.fragment,trackFragment).commit();
-        tabs.setVisibility(View.VISIBLE);
-        point.setVisibility(View.INVISIBLE);
-    }
-
     public class Task extends TimerTask {
-
         @Override
         public void run() {
             websocketClient.connect();

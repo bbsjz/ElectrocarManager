@@ -25,6 +25,7 @@ import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.Notification.NotificationGroupRecycleAdapter;
 import com.example.electrocarmanager.Notification.NotificationRecyclerViewAdapter;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.BDLocUtil;
 import com.example.electrocarmanager.Utils.DataBaseDateAdapter;
 import com.example.electrocarmanager.Utils.DateAdapter;
 import com.example.electrocarmanager.Utils.DateUtils;
@@ -52,7 +53,7 @@ import java.util.List;
  * @author bbg
  * 在开启位移提醒时，用于显示移动结果的fragment
  */
-public class TrackFragment extends Fragment  implements View.OnClickListener {
+public class TrackFragment extends Fragment  {
 
     Handler handler;
 
@@ -65,7 +66,6 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
     public Notify notify=new Notify();//实时的移动信息
     NotifyGroup group=new NotifyGroup();//实时的移动信息组
 
-    RealTimeClickListener listener;
 
     //UI
     TextView alert;
@@ -81,6 +81,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
     boolean ifHasNewOldData=false;//是否需要更新旧数据
     final String moving="正在发生的位移";
     final String notMoving="当前没有正在发生的位移";
+    MovingDto local;//上一次的移动状态
 
     public TrackFragment(NotificationRecyclerViewAdapter.ItemClickListener itemClickListener,Handler handler)
     {
@@ -99,7 +100,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
     @Override
     public void onViewCreated(@NonNull View view,@Nullable Bundle savedBundle)
     {
-        if(data.size()==0)
+        if(data.size()<5)
         {
             getOldMsgAndParse();
         }
@@ -123,15 +124,11 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                 {
                     if(lastVisibleItem+1==adapter.getItemCount())//如果滑动停止的时候到底，即可以看到最后一个元素的时候
                     {
-                        adapter.setIfLoading(1);
-                        adapter.updateState();//此处是为了显示正在加载
-
                         getOldMsgAndParse();
 
                         if(ifHasNewOldData)//如果查到了新的数据就更新
                         {
                             adapter.setData(data);
-                            adapter.setIfLoading(0);
                             ifHasNewOldData=false;
                         }
                         else//如果没有查到就显示没有更多数据
@@ -162,28 +159,16 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
         if(MainActivity.realAlertOn)
         {
             alert.setText("位置移动提醒已开启");
-            //如果打开了位移提醒并且显示已经在移动，那么此前必然已经添加了数据，此时只需要更新数据即可
-            if(isMoving&&!data.get(0).equals(moving)&&!data.get(0).equals(notMoving))
-            {
-                data.add(0,group);
-                adapter.setData(data);
-                adapter.updateState();
-            }
-            else if(isMoving)
-            {
-                adapter.setData(data);
-                adapter.updateState();
-            }
-            //如果没有处于移动状态，并且data没有实时信息那一栏，需要手动添加
-            else if(!data.get(0).date.equals(notMoving))
+            //一旦开启提醒，并且data没有实时信息那一栏，需要手动添加
+            if(data.size()==0||(!data.get(0).date.equals(notMoving)&&!data.get(0).date.equals(moving)))
             {
                 group.date=notMoving;
                 List<Notify> notifies=new ArrayList<>();
                 group.notifications=notifies;
                 data.add(0,group);
-                adapter.setData(data);
-                adapter.updateState();
             }
+            adapter.setData(data);
+            adapter.updateState();
         }
         else
         {
@@ -226,23 +211,15 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                 notify.to=getAddress.getAddress();
                 notify.last="00:00:00";
                 notify.distance=0.0;
-                points.add(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude));
+                points.add(BDLocUtil.GPStoBD09LL(new LatLng(movingDto.fromLatitude,movingDto.fromLongitude)));
 
                 group.date=moving;
                 List<Notify> notifies=new ArrayList<>();
                 notifies.add(notify);
                 group.notifications=notifies;
 
-                //更新UI，展示实时移动信息
-
-                if(data.get(0).date.equals(notMoving))
-                {
-                    data.get(0).date=moving;
-                    List<Notify> notifiesList=new ArrayList<>();
-                    notifies.add(notify);
-                    data.get(0).notifications=notifiesList;
-                }
-                else
+                //如果第一条不是group，则加入
+                if(data.size()==0||(!data.get(0).date.equals(moving)&&!data.get(0).equals(notMoving)))
                 {
                     data.add(0,group);
                 }
@@ -275,22 +252,20 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                 }
 
                 //保存数据
-                points.add(new LatLng(movingDto.toLatitude,movingDto.toLongitude));
+                points.add(BDLocUtil.GPStoBD09LL(new LatLng(movingDto.toLatitude,movingDto.toLongitude)));
                 notify.to=getAddress.getAddress();
                 notify.last=DateUtils.convertMillis((movingDto.endTime.getTime()-movingDto.beginTime.getTime())/1000);
                 notify.distance=movingDto.distance;
-                group.notifications.remove(0);
-                group.notifications.add(notify);
-
-                if(!data.get(0).date.equals(moving))//第一条不是正在发生的移动就说明被删了
+                if(group.notifications.size()!=0)
                 {
-
-                    data.add(group);
+                    group.notifications.remove(0);
                 }
-                else
+                group.notifications.add(notify);
+                group.date=moving;
+
+                if(data.size()==0||(!data.get(0).date.equals(moving)&&!data.get(0).date.equals(notMoving)))//第一条不是移动信息，则添加
                 {
-                    data.get(0).notifications.remove(0);
-                    data.get(0).notifications.add(notify);
+                    data.add(0,group);
                 }
 
                 //更新UI
@@ -303,6 +278,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                     msg.what=3;
                     handler.sendMessage(msg);
                 }
+                local=movingDto;
             }
             else if(isMoving)//如果此前还处于移动状态，但是这次已经显示没有移动了，则从此时开始车辆的此次移动已经停止
             {
@@ -313,24 +289,21 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
                 group.date=notMoving;
                 group.notifications=new ArrayList<>();
 
-                if(!data.get(0).date.equals(moving))//第一条不是正在发生的移动就说明被删了
+                if(data.size()==0||(!data.get(0).date.equals(moving)&&!data.get(0).date.equals(notMoving)))//第一条不是正在发生的移动就说明被删了
                 {
                     data.add(group);
-                }
-                else
-                {
-                    data.get(0).date=notMoving;
-                    data.get(0).notifications=new ArrayList<>();
                 }
 
                 //更新UI
                 updateUpperUI();
 
-                addToLocal(movingDto);
+                addToLocal(local);
             }
         }
        catch(Exception ex)
-       {}
+       {
+           String e=ex.getMessage();
+       }
 
     }
 
@@ -354,6 +327,10 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
     void parseOldData(String rowData)
     {
         try {
+            if(rowData==null)
+            {
+                return;
+            }
             JSONObject jsonObject=new JSONObject(rowData);
             int totalPage=jsonObject.optInt("totalPages");
             if(totalPage==0||totalPage<=page)
@@ -404,7 +381,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
 
                 notification.distance = list.get(i).distance;
                 notification.id = list.get(i).id;
-                notification.last = DateUtils.convertMillis((list.get(i).beginTime.getTime() - list.get(i).endTime.getTime()) / 1000);
+                notification.last = DateUtils.convertMillis((list.get(i).endTime.getTime() - list.get(i).beginTime.getTime()) / 1000);
                 if (data.size() != 0 && data.get(data.size() - 1).date.equals(date)) {
                     data.get(data.size() - 1).notifications.add(notification);
                 } else {
@@ -427,12 +404,13 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
     void addToLocal(MovingDto move)
     {
         notify.id=move.id;
+        notify.time=DateUtils.toHourAndMinute(move.beginTime) + "-" + DateUtils.toHourAndMinute(move.endTime);
         //如果此时，列表中已经有日期并且和当天日期一样，那么插入，并且因为是最近的一条数据所以要插入在最前端
-        if(data.size()!=0&&data.get(0).date.equals(DateUtils.toYearAndMonthAndDate(move.beginTime)))
+        if(data.size()!=0&&data.get(1).date.equals(DateUtils.toYearAndMonthAndDate(move.beginTime)))
         {
-            List<Notify> list=data.get(0).notifications;
+            List<Notify> list=data.get(1).notifications;
             list.add(0,notify);
-            data.get(0).notifications=list;
+            data.get(1).notifications=list;
         }
         //如果当前列表中没有数据，或者说当前列表最前端的日期和这条数据的日期不相符合，
         //那么此时要新建一个日期并且插入，且插入在最前面
@@ -443,7 +421,7 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
             List<Notify> list=new ArrayList<>();
             list.add(notify);
             group.notifications=list;
-            data.add(0,group);
+            data.add(1,group);
         }
         int total=0;
         for(NotifyGroup notifyGroup:data)
@@ -459,18 +437,4 @@ public class TrackFragment extends Fragment  implements View.OnClickListener {
         adapter.updateState();
     }
 
-    //当实时移动信息被点击后执行
-    @Override
-    public void onClick(View v) {
-        if(listener!=null)
-        {
-            listener.onRealTimeClick();
-        }
-    }
-
-
-    public interface RealTimeClickListener
-    {
-        void onRealTimeClick();
-    }
 }

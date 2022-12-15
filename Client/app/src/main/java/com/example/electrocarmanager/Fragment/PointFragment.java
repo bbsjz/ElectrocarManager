@@ -23,6 +23,7 @@ import com.baidu.mapapi.model.LatLng;
 import com.example.electrocarmanager.Entity.Point;
 import com.example.electrocarmanager.NetWork.PointPost;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.BDLocUtil;
 import com.example.electrocarmanager.Utils.DataBaseDateAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -131,7 +132,8 @@ public class PointFragment extends Fragment implements View.OnClickListener{
         for(Point point:points)
         {
             LatLng latLng=new LatLng(point.latitude,point.longitude);
-            data.add(latLng);
+            LatLng bdLatLng= BDLocUtil.GPStoBD09LL(latLng);
+            data.add(bdLatLng);
         }
     }
 
@@ -161,11 +163,16 @@ public class PointFragment extends Fragment implements View.OnClickListener{
         //定义地图状态
         MapStatus mMapStatus = new MapStatus.Builder()
                 .target(cent)
+                .zoom(18)
                 .build();
         //定义MapStatusUpdate对象，以便描述地图状态将要发生的变化
         MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
         //改变地图状态
         baiduMap.setMapStatus(mMapStatusUpdate);
+        if(data.size()<=2)
+        {
+            return;
+        }
         //设置折线的属性
         OverlayOptions mOverlayOptions = new PolylineOptions()
                 .width(10)
@@ -175,19 +182,5 @@ public class PointFragment extends Fragment implements View.OnClickListener{
         //mPloyline 折线对象
         Overlay mPolyline = baiduMap.addOverlay(mOverlayOptions);
 
-    }
-
-    void test()
-    {
-        LatLng p=new LatLng(39.5,116.0);
-        LatLng p2=new LatLng(39.5,116.1);
-        LatLng p3=new LatLng(39.5,116.2);
-        LatLng p4=new LatLng(39.5,116.3);
-        LatLng p5=new LatLng(39.5,116.4);
-        data.add(p);
-        data.add(p2);
-        data.add(p3);
-        data.add(p4);
-        data.add(p5);
     }
 }

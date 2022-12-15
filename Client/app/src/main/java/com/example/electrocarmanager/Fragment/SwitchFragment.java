@@ -98,6 +98,11 @@ public class SwitchFragment extends Fragment {
                 Toast.makeText(getContext(),"已启动",Toast.LENGTH_SHORT).show();
                 ifOpen=2;
             }
+            else if(ifOpen==2)
+            {
+                sendCommand(3);
+                Toast.makeText(getContext(),"已启动",Toast.LENGTH_SHORT).show();
+            }
         });
         lock.setOnClickListener(v->{
             sendCommand(1);
