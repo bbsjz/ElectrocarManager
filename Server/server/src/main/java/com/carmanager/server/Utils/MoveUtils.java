@@ -26,7 +26,7 @@ public class MoveUtils {
 
     final int movingThreshold = 2; // 明显移动的阈值
 
-    final int timeThreshold = 60 * 1000; // 最长不移动时间，以ms记
+    final int timeThreshold = 10 * 1000; // 最长不移动时间，以ms记
 
     /**
      * 缓冲区中出现了多少次移动
