@@ -21,12 +21,14 @@ public class NotificationGroupRecycleAdapter extends RecyclerView.Adapter<Recycl
     List<NotifyGroup> data;
     LayoutInflater inflater;
     Context context;
-    int ifLoading=0;//0表示不显示，1表示正在加载，2表示没有更多数据
+    int ifLoading=1;//1表示正在加载，2表示没有更多数据
 
     private int normalType = 0;     // 第一种ViewType，正常的item
     private int footType = 1;       // 第二种ViewType，底部的提示View
 
-    public NotificationGroupRecycleAdapter(List<NotifyGroup> data, NotificationRecyclerViewAdapter.ItemClickListener itemClickListener, Context context)
+    public NotificationGroupRecycleAdapter(List<NotifyGroup> data,
+                                           NotificationRecyclerViewAdapter.ItemClickListener itemClickListener,
+                                           Context context)
     {
         this.data=data;
         this.itemClickListener = itemClickListener;
@@ -68,26 +70,18 @@ public class NotificationGroupRecycleAdapter extends RecyclerView.Adapter<Recycl
             ((NotificationGroupHolder) holder).notification.setLayoutManager(linearLayoutManager);
             ((NotificationGroupHolder) holder).notification.setAdapter(adapter);
             ((NotificationGroupHolder) holder).date.setText(notificationGroup.date);
-//            if(position==data.size()-1)
-//            {
-//                ((NotificationGroupHolder) holder).notification.setPadding(PxUtils.dp2px(context,10),PxUtils.dp2px(context,50),PxUtils.dp2px(context,10),PxUtils.dp2px(context,80));
-//            }
         }
         else if(holder instanceof FootHolder)
         {
             if(ifLoading==1)
             {
-                ((FootHolder) holder).foot.setText("正在加载中");
+                ((FootHolder) holder).foot.setText("正在加载中...");
                 ((FootHolder) holder).foot.setVisibility(View.VISIBLE);
             }
             else if(ifLoading==2)
             {
                 ((FootHolder) holder).foot.setText("没有更多数据");
                 ((FootHolder) holder).foot.setVisibility(View.VISIBLE);
-            }
-            else if(ifLoading==0)
-            {
-                ((FootHolder) holder).foot.setVisibility(View.INVISIBLE);
             }
         }
     }

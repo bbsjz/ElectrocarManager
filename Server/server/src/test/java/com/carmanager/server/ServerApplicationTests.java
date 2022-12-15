@@ -21,8 +21,6 @@ class ServerApplicationTests {
         @Test
         void gsonTest()
         {
-                long time=1670093623000l;
-                Date date=new Date(time);
-                System.out.println(date);
+               
         }
 }

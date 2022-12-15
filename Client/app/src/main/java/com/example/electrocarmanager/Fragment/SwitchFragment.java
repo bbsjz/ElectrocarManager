@@ -29,7 +29,7 @@ import java.net.URL;
  */
 public class SwitchFragment extends Fragment {
 
-    final String OPERATE_LOCK_ADDRESS="http://192.168.43.120:8080/lock";
+    final String OPERATE_LOCK_ADDRESS="https://jp.safengine.xyz/lock";
 
     Handler handler;
 
@@ -97,6 +97,11 @@ public class SwitchFragment extends Fragment {
                 sendCommand(3);
                 Toast.makeText(getContext(),"已启动",Toast.LENGTH_SHORT).show();
                 ifOpen=2;
+            }
+            else if(ifOpen==2)
+            {
+                sendCommand(3);
+                Toast.makeText(getContext(),"已启动",Toast.LENGTH_SHORT).show();
             }
         });
         lock.setOnClickListener(v->{

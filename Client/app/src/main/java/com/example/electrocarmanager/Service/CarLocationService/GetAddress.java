@@ -1,5 +1,8 @@
 package com.example.electrocarmanager.Service.CarLocationService;
 
+import com.baidu.mapapi.model.LatLng;
+import com.example.electrocarmanager.Utils.BDLocUtil;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,8 +24,10 @@ public class GetAddress implements Runnable{
 
     public GetAddress(double lat, double log)
     {
-        this.lat=lat;
-        this.log=log;
+        LatLng latLng=new LatLng(lat,log);
+        LatLng bdLatLng= BDLocUtil.GPStoBD09LL(latLng);
+        this.lat=bdLatLng.latitude;
+        this.log=bdLatLng.longitude;
     }
 
     public void run()

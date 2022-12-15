@@ -80,12 +80,20 @@ public class NotificationRecyclerViewAdapter extends RecyclerView.Adapter<Notifi
         @Override
         public void onClick(View view) {
             if (clickListener != null)
-                clickListener.onItemClick(getItem(getAdapterPosition()));
+            {
+                if(time.getText().toString().contains("-"))
+                {
+                    clickListener.onItemClick(getItem(getAdapterPosition()),false);
+                }
+                else
+                {
+                    clickListener.onItemClick(getItem(getAdapterPosition()),true);
+                }
+            }
         }
     }
 
     public interface ItemClickListener {
-        void onItemClick(Notify notification);
+        void onItemClick(Notify notification,boolean ifReal);
     }
-
 }

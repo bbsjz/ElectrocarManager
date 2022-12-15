@@ -42,6 +42,7 @@ import com.baidu.mapapi.search.route.WalkingRouteResult;
 import com.example.electrocarmanager.Entity.MovingDto;
 import com.example.electrocarmanager.MainActivity;
 import com.example.electrocarmanager.R;
+import com.example.electrocarmanager.Utils.BDLocUtil;
 import com.example.electrocarmanager.Utils.DateAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -220,12 +221,13 @@ public class LocationFragment extends Fragment {
             };
             search.setOnGetRoutePlanResultListener(listener);
             PlanNode stNode = PlanNode.withLocation(myLoc);
-            PlanNode enNode = PlanNode.withLocation(carLoc);
+            PlanNode enNode = PlanNode.withLocation(BDLocUtil.GPStoBD09LL(carLoc));
             search.walkingSearch((new WalkingRoutePlanOption())
                     .from(stNode)
                     .to(enNode));
         });
     }
+
     @Override
     public void onResume()
     {
@@ -305,7 +307,7 @@ public class LocationFragment extends Fragment {
         BitmapDescriptor bitmap = BitmapDescriptorFactory.fromResource(R.drawable.loc1);
         //构建MarkerOption，用于在地图上添加Marker
         OverlayOptions option = new MarkerOptions()
-                    .position(carLoc)
+                    .position(BDLocUtil.GPStoBD09LL(carLoc))
                     .icon(bitmap);
         //在地图上添加Marker，并显示
         Overlay overlay=baiduMap.addOverlay(option);
